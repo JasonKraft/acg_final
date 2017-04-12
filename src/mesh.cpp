@@ -153,22 +153,22 @@ void Mesh::Load() {
     } else if (!strcmp(token,"f")) {
       int num = sscanf (line, "%s %s %s %s\n",token,
 			atoken,btoken,ctoken);
-      sscanf (atoken,"%d//%d",&a, &an);
-      sscanf (btoken,"%d//%d",&b, &bn);
-      sscanf (ctoken,"%d//%d",&c, &cn);
+      sscanf (atoken,"%d",&a);
+      sscanf (btoken,"%d",&b);
+      sscanf (ctoken,"%d",&c);
       assert (num == 4);
 
-      if (a < 0) {
-        a += vert_count + 1;
-      }
-
-      if (b < 0) {
-        b += vert_count + 1;
-      }
-
-      if (c < 0) {
-        c += vert_count + 1;
-      }
+      // if (a < 0) {
+      //   a += vert_count + vert_index;
+      // }
+      //
+      // if (b < 0) {
+      //   b += vert_count + vert_index;
+      // }
+      //
+      // if (c < 0) {
+      //   c += vert_count + vert_index;
+      // }
 
       a -= vert_index;
       b -= vert_index;

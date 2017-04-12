@@ -78,63 +78,63 @@ void Mesh::cleanupVBOs() {
 
 void Mesh::SetupLight(const glm::vec3 &light_position) {
   light_vert.push_back(VBOPosNormalColor(light_position,glm::vec3(1,0,0),glm::vec4(1,1,0,0)));
-  glBindBuffer(GL_ARRAY_BUFFER,light_vert_VBO); 
-  glBufferData(GL_ARRAY_BUFFER,sizeof(VBOPosNormalColor)*1,&light_vert[0],GL_STATIC_DRAW); 
+  glBindBuffer(GL_ARRAY_BUFFER,light_vert_VBO);
+  glBufferData(GL_ARRAY_BUFFER,sizeof(VBOPosNormalColor)*1,&light_vert[0],GL_STATIC_DRAW);
 }
 
 
-void Mesh::SetupMirror() {
-  glm::vec3 diff = bbox.getMax()-bbox.getMin();
-  // create frame vertices just a bit bigger than the bounding box
-  glm::vec3 a = bbox.getMin() + glm::vec3(-0.25*diff.x, 0.1*diff.y,-0.25*diff.z);
-  glm::vec3 b = bbox.getMin() + glm::vec3(-0.25*diff.x, 1.25*diff.y,-0.25*diff.z);
-  glm::vec3 c = bbox.getMin() + glm::vec3(-0.25*diff.x, 1.25*diff.y, 1.25*diff.z);
-  glm::vec3 d = bbox.getMin() + glm::vec3(-0.25*diff.x, 0.1*diff.y, 1.25*diff.z);
-  glm::vec3 normal = ComputeNormal(a,c,b);
-  glm::vec4 color(0.1,0.1,0.1,1);
+// void Mesh::SetupMirror() {
+//   glm::vec3 diff = bbox.getMax()-bbox.getMin();
+//   // create frame vertices just a bit bigger than the bounding box
+//   glm::vec3 a = bbox.getMin() + glm::vec3(-0.25*diff.x, 0.1*diff.y,-0.25*diff.z);
+//   glm::vec3 b = bbox.getMin() + glm::vec3(-0.25*diff.x, 1.25*diff.y,-0.25*diff.z);
+//   glm::vec3 c = bbox.getMin() + glm::vec3(-0.25*diff.x, 1.25*diff.y, 1.25*diff.z);
+//   glm::vec3 d = bbox.getMin() + glm::vec3(-0.25*diff.x, 0.1*diff.y, 1.25*diff.z);
+//   glm::vec3 normal = ComputeNormal(a,c,b);
+//   glm::vec4 color(0.1,0.1,0.1,1);
+//
+//   mirror_tri_verts.push_back(VBOPosNormalColor(a,normal,mirror_color));
+//   mirror_tri_verts.push_back(VBOPosNormalColor(b,normal,mirror_color));
+//   mirror_tri_verts.push_back(VBOPosNormalColor(c,normal,mirror_color));
+//   mirror_tri_verts.push_back(VBOPosNormalColor(d,normal,mirror_color));
+//   mirror_tri_indices.push_back(VBOIndexedTri(0,1,2));
+//   mirror_tri_indices.push_back(VBOIndexedTri(0,2,3));
+//   glBindBuffer(GL_ARRAY_BUFFER,mirror_tri_verts_VBO);
+//   glBufferData(GL_ARRAY_BUFFER,
+// 	       sizeof(VBOPosNormalColor) * mirror_tri_verts.size(),
+// 	       &mirror_tri_verts[0],
+// 	       GL_STATIC_DRAW);
+//   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,mirror_tri_indices_VBO);
+//   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+// 	       sizeof(VBOIndexedTri) * mirror_tri_indices.size(),
+// 	       &mirror_tri_indices[0], GL_STATIC_DRAW);
+// }
 
-  mirror_tri_verts.push_back(VBOPosNormalColor(a,normal,mirror_color));
-  mirror_tri_verts.push_back(VBOPosNormalColor(b,normal,mirror_color));
-  mirror_tri_verts.push_back(VBOPosNormalColor(c,normal,mirror_color));
-  mirror_tri_verts.push_back(VBOPosNormalColor(d,normal,mirror_color));
-  mirror_tri_indices.push_back(VBOIndexedTri(0,1,2));
-  mirror_tri_indices.push_back(VBOIndexedTri(0,2,3));
-  glBindBuffer(GL_ARRAY_BUFFER,mirror_tri_verts_VBO); 
-  glBufferData(GL_ARRAY_BUFFER,
-	       sizeof(VBOPosNormalColor) * mirror_tri_verts.size(), 
-	       &mirror_tri_verts[0],
-	       GL_STATIC_DRAW); 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,mirror_tri_indices_VBO); 
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-	       sizeof(VBOIndexedTri) * mirror_tri_indices.size(),
-	       &mirror_tri_indices[0], GL_STATIC_DRAW);
-}
 
-
-void Mesh::SetupFloor() {
-  glm::vec3 diff = bbox.getMax()-bbox.getMin();
-  // create vertices just a bit bigger than the bounding box
-  glm::vec3 a = bbox.getMin() + glm::vec3(-floor_factor*diff.x,0,-floor_factor*diff.z);
-  glm::vec3 b = bbox.getMin() + glm::vec3(-floor_factor*diff.x,0, (1+floor_factor)*diff.z);
-  glm::vec3 c = bbox.getMin() + glm::vec3( (1+floor_factor)*diff.x,0, (1+floor_factor)*diff.z);
-  glm::vec3 d = bbox.getMin() + glm::vec3( (1+floor_factor)*diff.x,0,-floor_factor*diff.z);
-  glm::vec3 normal = ComputeNormal(a,c,d);
-  floor_tri_verts.push_back(VBOPosNormalColor(a,normal,floor_color));
-  floor_tri_verts.push_back(VBOPosNormalColor(b,normal,floor_color));
-  floor_tri_verts.push_back(VBOPosNormalColor(c,normal,floor_color));
-  floor_tri_verts.push_back(VBOPosNormalColor(d,normal,floor_color));
-  floor_tri_indices.push_back(VBOIndexedTri(0,1,2));
-  floor_tri_indices.push_back(VBOIndexedTri(0,2,3));
-  glBindBuffer(GL_ARRAY_BUFFER,floor_tri_verts_VBO); 
-  glBufferData(GL_ARRAY_BUFFER,
-	       sizeof(VBOPosNormalColor) * floor_tri_verts.size(), 
-	       &floor_tri_verts[0],
-	       GL_STATIC_DRAW); 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,floor_tri_indices_VBO); 
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-	       sizeof(VBOIndexedTri) * floor_tri_indices.size(),
-	       &floor_tri_indices[0], GL_STATIC_DRAW);
-}
+// void Mesh::SetupFloor() {
+//   glm::vec3 diff = bbox.getMax()-bbox.getMin();
+//   // create vertices just a bit bigger than the bounding box
+//   glm::vec3 a = bbox.getMin() + glm::vec3(-floor_factor*diff.x,0,-floor_factor*diff.z);
+//   glm::vec3 b = bbox.getMin() + glm::vec3(-floor_factor*diff.x,0, (1+floor_factor)*diff.z);
+//   glm::vec3 c = bbox.getMin() + glm::vec3( (1+floor_factor)*diff.x,0, (1+floor_factor)*diff.z);
+//   glm::vec3 d = bbox.getMin() + glm::vec3( (1+floor_factor)*diff.x,0,-floor_factor*diff.z);
+//   glm::vec3 normal = ComputeNormal(a,c,d);
+//   floor_tri_verts.push_back(VBOPosNormalColor(a,normal,floor_color));
+//   floor_tri_verts.push_back(VBOPosNormalColor(b,normal,floor_color));
+//   floor_tri_verts.push_back(VBOPosNormalColor(c,normal,floor_color));
+//   floor_tri_verts.push_back(VBOPosNormalColor(d,normal,floor_color));
+//   floor_tri_indices.push_back(VBOIndexedTri(0,1,2));
+//   floor_tri_indices.push_back(VBOIndexedTri(0,2,3));
+//   glBindBuffer(GL_ARRAY_BUFFER,floor_tri_verts_VBO);
+//   glBufferData(GL_ARRAY_BUFFER,
+// 	       sizeof(VBOPosNormalColor) * floor_tri_verts.size(),
+// 	       &floor_tri_verts[0],
+// 	       GL_STATIC_DRAW);
+//   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,floor_tri_indices_VBO);
+//   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+// 	       sizeof(VBOIndexedTri) * floor_tri_indices.size(),
+// 	       &floor_tri_indices[0], GL_STATIC_DRAW);
+// }
 
 
 void Mesh::SetupMesh() {
@@ -143,7 +143,7 @@ void Mesh::SetupMesh() {
     Triangle *t = iter->second;
     glm::vec3 a = (*t)[0]->getPos();
     glm::vec3 b = (*t)[1]->getPos();
-    glm::vec3 c = (*t)[2]->getPos();    
+    glm::vec3 c = (*t)[2]->getPos();
     glm::vec3 na = ComputeNormal(a,b,c);
     glm::vec3 nb = na;
     glm::vec3 nc = na;
@@ -158,75 +158,75 @@ void Mesh::SetupMesh() {
     mesh_tri_verts.push_back(VBOPosNormalColor(c,nc,mesh_color));
     mesh_tri_indices.push_back(VBOIndexedTri(start,start+1,start+2));
   }
-  glBindBuffer(GL_ARRAY_BUFFER,mesh_tri_verts_VBO); 
+  glBindBuffer(GL_ARRAY_BUFFER,mesh_tri_verts_VBO);
   glBufferData(GL_ARRAY_BUFFER,
-	       sizeof(VBOPosNormalColor) * mesh_tri_verts.size(), 
+	       sizeof(VBOPosNormalColor) * mesh_tri_verts.size(),
 	       &mesh_tri_verts[0],
-	       GL_STATIC_DRAW); 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,mesh_tri_indices_VBO); 
+	       GL_STATIC_DRAW);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,mesh_tri_indices_VBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
 	       sizeof(VBOIndexedTri) * mesh_tri_indices.size(),
 	       &mesh_tri_indices[0], GL_STATIC_DRAW);
 }
 
 
-// draw a second copy of the object where it appears to be on the other side of the mirror
-void Mesh::SetupReflectedMesh() {
+// // draw a second copy of the object where it appears to be on the other side of the mirror
+// void Mesh::SetupReflectedMesh() {
+//
+//
+//
+//   // ASSIGNMENT: WRITE THIS FUNCTION
+//
+//
+// }
+//
+//
+// // draw a second copy of the floor where it appears to be on the other side of the mirror
+// void Mesh::SetupReflectedFloor() {
+//
+//
+//
+//   // ASSIGNMENT: WRITE THIS FUNCTION
+//
+//
+// }
 
 
-
-  // ASSIGNMENT: WRITE THIS FUNCTION
-
-
-}
-
-
-// draw a second copy of the floor where it appears to be on the other side of the mirror
-void Mesh::SetupReflectedFloor() {
-
-
-
-  // ASSIGNMENT: WRITE THIS FUNCTION
-
-
-}
-
-
-// figure out which edges are the silhouette of the object 
-void Mesh::SetupSilhouetteEdges(const glm::vec3 &light_position) {
-
-
-
-  // ASSIGNMENT: FIND THE SILOUETTE EDGES
-
-  float thickness = 0.003*getBoundingBox().maxDim();
-  
-  // & use this helper function to create geometry for each edge
-  // addEdgeGeometry(silhouette_edge_tri_verts,silhouette_edge_tri_indices,
-  //                 /*VERTEX POS A*/,/*VERTEX POS B*/,red,red,thickness,thickness);
-
-
-
-  if (silhouette_edge_tri_verts.size() > 0) {
-    glBindBuffer(GL_ARRAY_BUFFER,silhouette_edge_tri_verts_VBO); 
-    glBufferData(GL_ARRAY_BUFFER,sizeof(VBOPosNormalColor)*silhouette_edge_tri_verts.size(),&silhouette_edge_tri_verts[0],GL_STATIC_DRAW); 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,silhouette_edge_tri_indices_VBO); 
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(VBOIndexedTri)*silhouette_edge_tri_indices.size(),&silhouette_edge_tri_indices[0],GL_STATIC_DRAW);
-  }
-}
-
-
-// project the silhouette edges away from the light source
-void Mesh::SetupShadowPolygons(const glm::vec3 &light_position) {
-
-
-
-  // ASSIGNMENT: WRITE THIS FUNCTION
-  
-
-
-
-}
+// // figure out which edges are the silhouette of the object
+// void Mesh::SetupSilhouetteEdges(const glm::vec3 &light_position) {
+//
+//
+//
+//   // ASSIGNMENT: FIND THE SILOUETTE EDGES
+//
+//   float thickness = 0.003*getBoundingBox().maxDim();
+//
+//   // & use this helper function to create geometry for each edge
+//   // addEdgeGeometry(silhouette_edge_tri_verts,silhouette_edge_tri_indices,
+//   //                 /*VERTEX POS A*/,/*VERTEX POS B*/,red,red,thickness,thickness);
+//
+//
+//
+//   if (silhouette_edge_tri_verts.size() > 0) {
+//     glBindBuffer(GL_ARRAY_BUFFER,silhouette_edge_tri_verts_VBO);
+//     glBufferData(GL_ARRAY_BUFFER,sizeof(VBOPosNormalColor)*silhouette_edge_tri_verts.size(),&silhouette_edge_tri_verts[0],GL_STATIC_DRAW);
+//     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,silhouette_edge_tri_indices_VBO);
+//     glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(VBOIndexedTri)*silhouette_edge_tri_indices.size(),&silhouette_edge_tri_indices[0],GL_STATIC_DRAW);
+//   }
+// }
+//
+//
+// // project the silhouette edges away from the light source
+// void Mesh::SetupShadowPolygons(const glm::vec3 &light_position) {
+//
+//
+//
+//   // ASSIGNMENT: WRITE THIS FUNCTION
+//
+//
+//
+//
+// }
 
 // ================================================================================
 // ================================================================================
@@ -250,8 +250,8 @@ void Mesh::DrawLight() {
 
 void Mesh::DrawMirror() {
   HandleGLError("enter draw mirror");
-  glBindBuffer(GL_ARRAY_BUFFER,mirror_tri_verts_VBO); 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,mirror_tri_indices_VBO); 
+  glBindBuffer(GL_ARRAY_BUFFER,mirror_tri_verts_VBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,mirror_tri_indices_VBO);
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,sizeof(VBOPosNormalColor),(void*)0);
   glEnableVertexAttribArray(1);
@@ -267,8 +267,8 @@ void Mesh::DrawMirror() {
 
 void Mesh::DrawFloor() {
   HandleGLError("enter draw floor");
-  glBindBuffer(GL_ARRAY_BUFFER,floor_tri_verts_VBO); 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,floor_tri_indices_VBO); 
+  glBindBuffer(GL_ARRAY_BUFFER,floor_tri_verts_VBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,floor_tri_indices_VBO);
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,sizeof(VBOPosNormalColor),(void*)0);
   glEnableVertexAttribArray(1);
@@ -284,8 +284,8 @@ void Mesh::DrawFloor() {
 
 void Mesh::DrawMesh() {
   HandleGLError("enter draw mesh");
-  glBindBuffer(GL_ARRAY_BUFFER,mesh_tri_verts_VBO); 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,mesh_tri_indices_VBO); 
+  glBindBuffer(GL_ARRAY_BUFFER,mesh_tri_verts_VBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,mesh_tri_indices_VBO);
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,sizeof(VBOPosNormalColor),(void*)0);
   glEnableVertexAttribArray(1);
@@ -302,8 +302,8 @@ void Mesh::DrawMesh() {
 void Mesh::DrawReflectedFloor() {
   if (reflected_floor_tri_verts.size() > 0) {
     HandleGLError("enter draw reflected_floor");
-    glBindBuffer(GL_ARRAY_BUFFER,reflected_floor_tri_verts_VBO); 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,reflected_floor_tri_indices_VBO); 
+    glBindBuffer(GL_ARRAY_BUFFER,reflected_floor_tri_verts_VBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,reflected_floor_tri_indices_VBO);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,sizeof(VBOPosNormalColor),(void*)0);
     glEnableVertexAttribArray(1);
@@ -321,8 +321,8 @@ void Mesh::DrawReflectedFloor() {
 void Mesh::DrawReflectedMesh() {
   if (reflected_mesh_tri_verts.size() > 0) {
     HandleGLError("enter draw reflected_mesh");
-    glBindBuffer(GL_ARRAY_BUFFER,reflected_mesh_tri_verts_VBO); 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,reflected_mesh_tri_indices_VBO); 
+    glBindBuffer(GL_ARRAY_BUFFER,reflected_mesh_tri_verts_VBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,reflected_mesh_tri_indices_VBO);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,sizeof(VBOPosNormalColor),(void*)0);
     glEnableVertexAttribArray(1);
@@ -340,8 +340,8 @@ void Mesh::DrawReflectedMesh() {
 void Mesh::DrawSilhouetteEdges() {
   if (silhouette_edge_tri_verts.size() > 0) {
     HandleGLError("enter draw silhouette_edge");
-    glBindBuffer(GL_ARRAY_BUFFER,silhouette_edge_tri_verts_VBO); 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,silhouette_edge_tri_indices_VBO); 
+    glBindBuffer(GL_ARRAY_BUFFER,silhouette_edge_tri_verts_VBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,silhouette_edge_tri_indices_VBO);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,sizeof(VBOPosNormalColor),(void*)0);
     glEnableVertexAttribArray(1);
@@ -359,8 +359,8 @@ void Mesh::DrawSilhouetteEdges() {
 void Mesh::DrawShadowPolygons() {
   if (shadow_polygon_tri_verts.size() > 0) {
     HandleGLError("enter draw silhouette_edge");
-    glBindBuffer(GL_ARRAY_BUFFER,shadow_polygon_tri_verts_VBO); 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,shadow_polygon_tri_indices_VBO); 
+    glBindBuffer(GL_ARRAY_BUFFER,shadow_polygon_tri_verts_VBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,shadow_polygon_tri_indices_VBO);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,sizeof(VBOPosNormalColor),(void*)0);
     glEnableVertexAttribArray(1);
@@ -380,19 +380,19 @@ void Mesh::DrawShadowPolygons() {
 
 void Mesh::setupVBOs() {
   // delete all the old geometry
-  mesh_tri_verts.clear(); 
+  mesh_tri_verts.clear();
   mesh_tri_indices.clear();
-  reflected_mesh_tri_verts.clear(); 
+  reflected_mesh_tri_verts.clear();
   reflected_mesh_tri_indices.clear();
-  shadow_polygon_tri_verts.clear(); 
+  shadow_polygon_tri_verts.clear();
   shadow_polygon_tri_indices.clear();
-  mirror_tri_verts.clear(); 
+  mirror_tri_verts.clear();
   mirror_tri_indices.clear();
-  floor_tri_verts.clear(); 
+  floor_tri_verts.clear();
   floor_tri_indices.clear();
-  reflected_floor_tri_verts.clear(); 
+  reflected_floor_tri_verts.clear();
   reflected_floor_tri_indices.clear();
-  silhouette_edge_tri_verts.clear(); 
+  silhouette_edge_tri_verts.clear();
   silhouette_edge_tri_indices.clear();
   light_vert.clear();
 
@@ -433,7 +433,7 @@ void Mesh::drawVBOs() {
       DrawMesh();
       glUniform1i(GLCanvas::whichshaderID, 0);
     }
-  } 
+  }
 
   // ---------------------
   // MIRROR ONLY RENDERING
@@ -449,24 +449,24 @@ void Mesh::drawVBOs() {
     // draw back of mirror (if we can see the back)
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
-    DrawMirror();     
+    DrawMirror();
     glDisable(GL_CULL_FACE);
 
     // Draw mirror to stencil buffer, where depth buffer passes
     glEnable(GL_STENCIL_TEST);
     glStencilOp(GL_KEEP,GL_KEEP,GL_REPLACE);
-    glStencilFunc(GL_ALWAYS,1,~0); 
+    glStencilFunc(GL_ALWAYS,1,~0);
     // (only draw the mirror if we can see the front)
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-    DrawMirror();     
+    DrawMirror();
     glDisable(GL_CULL_FACE);
-    glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_FALSE); // disable frame buffer writes      
+    glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_FALSE); // disable frame buffer writes
     glDepthRange(1,1);
     glDepthFunc(GL_ALWAYS);
-    glStencilFunc(GL_EQUAL,1,~0); 
+    glStencilFunc(GL_EQUAL,1,~0);
     glStencilOp(GL_KEEP,GL_KEEP,GL_KEEP);
-    DrawMirror();     
+    DrawMirror();
 
     // Set depth to infinity, where stencil buffer passes
     glDepthFunc(GL_LESS);
@@ -477,21 +477,21 @@ void Mesh::drawVBOs() {
     DrawReflectedMesh();
     DrawReflectedFloor();
 
-    glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_FALSE); // disable frame buffer writes      
+    glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_FALSE); // disable frame buffer writes
     glStencilOp(GL_KEEP,GL_KEEP,GL_ZERO);
     glDepthFunc(GL_ALWAYS);
     DrawMirror();
     glDepthFunc(GL_LESS);
-    glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE); // enable frame buffer writes    
+    glColorMask(GL_TRUE,GL_TRUE,GL_TRUE,GL_TRUE); // enable frame buffer writes
 
     glDisable(GL_STENCIL_TEST);
-  } 
+  }
 
 
   // ---------------------
   // SHADOW ONLY RENDERING
   else if (!args->mirror && args->shadow) {
-    
+
 
 
   // ASSIGNMENT: WRITE THIS RENDERING MODE
@@ -500,7 +500,7 @@ void Mesh::drawVBOs() {
 
   // use the following code to turn the lights on & off
   // ... instead of glEnable(GL_LIGHTS), etc.
-  // mode 2: AMBIENT ONLY (LIGHT OFF) 
+  // mode 2: AMBIENT ONLY (LIGHT OFF)
   //glUniform1i(GLCanvas::colormodeID, 2);
   // mode 1: STANDARD PHONG LIGHTING (LIGHT ON)
   //glUniform1i(GLCanvas::colormodeID, 1);
@@ -548,7 +548,7 @@ void Mesh::drawVBOs() {
     // FIXME (not part of assignment): shadow polygons are currently
     //   visualized opaque.  in glut version they are transparent (and
     //   probably more helpful).  will eventually port/debug this.
-    
+
     //glDisable(GL_LIGHTING);
     //glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
     //glEnable(GL_BLEND);
@@ -562,7 +562,7 @@ void Mesh::drawVBOs() {
     //glEnable(GL_LIGHTING);
   }
 
-  HandleGLError(); 
+  HandleGLError();
 }
 
 // =================================================================
