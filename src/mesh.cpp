@@ -132,7 +132,6 @@ void Mesh::Load() {
   char ctoken[100] = "";
   float x,y,z;
   int a,b,c,d,e;
-  int an,bn,cn;
 
   int index = 0;
   int vert_count = 0;
@@ -158,17 +157,9 @@ void Mesh::Load() {
       sscanf (ctoken,"%d",&c);
       assert (num == 4);
 
-      // if (a < 0) {
-      //   a += vert_count + vert_index;
-      // }
-      //
-      // if (b < 0) {
-      //   b += vert_count + vert_index;
-      // }
-      //
-      // if (c < 0) {
-      //   c += vert_count + vert_index;
-      // }
+      // need to look at the next line and see if it begins with a v
+      // if it does then we are starting a new object/mesh
+      // then we need to create each object their own Mesh object
 
       a -= vert_index;
       b -= vert_index;
