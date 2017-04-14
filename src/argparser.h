@@ -15,15 +15,15 @@ inline void separatePathAndFile(const std::string &input, std::string &path, std
   // we need to separate the filename from the path
   // (we assume the vertex & fragment shaders are in the same directory)
   // first, locate the last '/' in the filename
-  size_t last = std::string::npos;  
+  size_t last = std::string::npos;
   while (1) {
     int next = input.find('/',last+1);
-    if (next != (int)std::string::npos) { 
+    if (next != (int)std::string::npos) {
       last = next;
       continue;
     }
     next = input.find('\\',last+1);
-    if (next != (int)std::string::npos) { 
+    if (next != (int)std::string::npos) {
       last = next;
       continue;
     }
@@ -55,17 +55,17 @@ public:
     DefaultValues();
     // parse the command line arguments
     for (int i = 1; i < argc; i++) {
-      if (std::string(argv[i]) == std::string("-input") || 
+      if (std::string(argv[i]) == std::string("-input") ||
           std::string(argv[i]) == std::string("-i")) {
-        i++; assert (i < argc); 
+        i++; assert (i < argc);
         separatePathAndFile(argv[i],path,input_file);
       } else if (std::string(argv[i]) == std::string("-shader")) {
         shader_filename = std::string(argv[i]);
       } else if (std::string(argv[i]) == std::string("-size")) {
-        i++; assert (i < argc); 
+        i++; assert (i < argc);
         width = height = atoi(argv[i]);
       } else {
-	std::cout << "ERROR: unknown command line argument " 
+	std::cout << "ERROR: unknown command line argument "
 		  << i << ": '" << argv[i] << "'" << std::endl;
 	exit(1);
       }
@@ -75,7 +75,7 @@ public:
   double rand() {
 #if 1
     // random seed
-    static std::random_device rd;    
+    static std::random_device rd;
     static std::mt19937 engine(rd());
 #else
     // deterministic randomness
@@ -90,8 +90,8 @@ public:
     input_file = "";
     path = "";
     shader_filename = "hw4_shader";
-    width = 300;
-    height = 300;
+    width = 500;
+    height = 500;
     mirror = false;
     shadow = false;
     geometry = true;

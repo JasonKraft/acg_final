@@ -74,9 +74,11 @@ void Mesh::SetupMesh() {
       nc = (*t)[2]->getGouraudNormal();
     }
     int start = mesh_tri_verts.size();
-    mesh_tri_verts.push_back(VBOPosNormalColor(a,na,mesh_color));
-    mesh_tri_verts.push_back(VBOPosNormalColor(b,nb,mesh_color));
-    mesh_tri_verts.push_back(VBOPosNormalColor(c,nc,mesh_color));
+    int triIndex = getVertexObjectIndex((*t)[0]->getIndex());
+    printf("object index: %d\n", triIndex);
+    mesh_tri_verts.push_back(VBOPosNormalColor(a,na,colors[triIndex]));
+    mesh_tri_verts.push_back(VBOPosNormalColor(b,nb,colors[triIndex]));
+    mesh_tri_verts.push_back(VBOPosNormalColor(c,nc,colors[triIndex]));
     mesh_tri_indices.push_back(VBOIndexedTri(start,start+1,start+2));
   }
   glBindBuffer(GL_ARRAY_BUFFER,mesh_tri_verts_VBO);

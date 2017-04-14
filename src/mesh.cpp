@@ -27,9 +27,12 @@ Mesh::~Mesh() {
     removeTriangle(todo[i]);
   }
   // delete all the vertices
-  int num_vertices = numVertices();
-  for (int i = 0; i < num_vertices; i++) {
-    delete vertices[i];
+  int num_objects = numObjects();
+  for (int i = 0; i < num_objects; i++) {
+    int num_vertices = numVertices(i);
+    for (int j = 0; j < num_vertices; j++) {
+        delete vertices[i][j];
+    }
   }
   cleanupVBOs();
 }
@@ -38,11 +41,12 @@ Mesh::~Mesh() {
 // MODIFIERS:   ADD & REMOVE
 // =======================================================================
 
-Vertex* Mesh::addVertex(const glm::vec3 &position) {
-  int index = numVertices();
+Vertex* Mesh::addVertex(const glm::vec3 &position, int i) {
+  int index = totalVertices();
   Vertex *v = new Vertex(index, position);
-  vertices.push_back(v);
-  if (numVertices() == 1)
+  vertices[i].push_back(v);
+  total_vertices++;
+  if (totalVertices() == 1)
     bbox = BoundingBox(position,position);
   else
     bbox.Extend(position);
@@ -125,8 +129,10 @@ void Mesh::Load() {
     return;
   }
 
+  char prevline[200] = "";
   char line[200] = "";
   char token[100] = "";
+  char token2[100] = "";
   char atoken[100] = "";
   char btoken[100] = "";
   char ctoken[100] = "";
@@ -136,19 +142,32 @@ void Mesh::Load() {
   int index = 0;
   int vert_count = 0;
   int vert_index = 1;
+  vertices.push_back(std::vector<Vertex*>());
+  int faces = 0;
 
   while (fgets(line, 200, objfile)) {
     int token_count = sscanf (line, "%s\n",token);
+    sscanf (prevline, "%s\n", token2);
     if (token_count == -1) continue;
     a = b = c = d = e = -1;
+
+    //if this is the first line in the obj file OR
+    //if the previous line denoted a face and the current line is a vertex, then
+    //we have a new object so crete a new vector in the vector of vertices
+    // if ((!strcmp(token, "v") && !strcmp(token2, "f")) ) {
+    //   index++;
+    //   vertices.push_back( std::vector<Vertex*>() );
+    // }
+
     if (!strcmp(token,"usemtl") ||
 	!strcmp(token,"g")) {
       vert_index = 1;
       index++;
+      vertices.push_back( std::vector<Vertex*>() );
     } else if (!strcmp(token,"v")) {
       vert_count++;
       sscanf (line, "%s %f %f %f\n",token,&x,&y,&z);
-      addVertex(glm::vec3(x,y,z));
+      addVertex(glm::vec3(x,y,z), index);
     } else if (!strcmp(token,"f")) {
       int num = sscanf (line, "%s %s %s %s\n",token,
 			atoken,btoken,ctoken);
@@ -157,23 +176,23 @@ void Mesh::Load() {
       sscanf (ctoken,"%d",&c);
       assert (num == 4);
 
-      // need to look at the next line and see if it begins with a v
-      // if it does then we are starting a new object/mesh
-      // then we need to create each object their own Mesh object
-
       a -= vert_index;
       b -= vert_index;
       c -= vert_index;
-      assert (a >= 0 && a < numVertices());
-      assert (b >= 0 && b < numVertices());
-      assert (c >= 0 && c < numVertices());
+      assert (a >= 0 && a < totalVertices());
+      assert (b >= 0 && b < totalVertices());
+      assert (c >= 0 && c < totalVertices());
       addTriangle(getVertex(a),getVertex(b),getVertex(c));
+      faces++;
     } else if (!strcmp(token,"vt")) {
     } else if (!strcmp(token,"vn")) {
     } else if (token[0] == '#') {
     } else {
       printf ("LINE: '%s'",line);
     }
+
+    //change prevline to current line
+    strcpy(prevline, line);
   }
 
   ComputeGouraudNormals();
@@ -187,7 +206,7 @@ void Mesh::Load() {
 void Mesh::ComputeGouraudNormals() {
   int i;
   // clear the normals
-  for (i = 0; i < numVertices(); i++) {
+  for (i = 0; i < totalVertices(); i++) {
     getVertex(i)->clearGouraudNormal();
   }
   // loop through all the triangles incrementing the normal at each vertex
@@ -202,7 +221,7 @@ void Mesh::ComputeGouraudNormals() {
     (*t)[2]->incrGouraudNormal(n);
   }
   // finally, normalize the sum at each vertex
-  for (i = 0; i < numVertices(); i++) {
+  for (i = 0; i < totalVertices(); i++) {
     getVertex(i)->normalizeGouraudNormal();
   }
 }

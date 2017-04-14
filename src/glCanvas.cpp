@@ -66,7 +66,7 @@ void GLCanvas::initialize(ArgParser *_args) {
     std::cerr << "ERROR: Failed to initialize GLFW" << std::endl;
     exit(1);
   }
-  
+
   // We will ask it to specifically open an OpenGL 3.2 context
   glfwWindowHint(GLFW_SAMPLES, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -112,14 +112,14 @@ void GLCanvas::initialize(ArgParser *_args) {
   GLCanvas::setupVBOs();
 
   // ===========================
-  // initial placement of camera 
+  // initial placement of camera
   // look at an object scaled & positioned to just fit in the box (-1,-1,-1)->(1,1,1)
   glm::vec3 camera_position = glm::vec3(1,3,8);
   glm::vec3 point_of_interest = glm::vec3(0,0,0);
   glm::vec3 up = glm::vec3(0,1,0);
   float angle = 20.0;
   camera = new PerspectiveCamera(camera_position, point_of_interest, up, angle);
-  camera->glPlaceCamera(); 
+  camera->glPlaceCamera();
 
   HandleGLError("finished glcanvas initialize");
 }
@@ -128,11 +128,11 @@ void GLCanvas::initialize(ArgParser *_args) {
 
 
 void GLCanvas::animate(){
-#if _WIN32    
+#if _WIN32
   static int last_tick_count;
   static int last_fps_count;
   static int frames = -1;
-  if (frames == -1) {    
+  if (frames == -1) {
     last_fps_count = last_tick_count = GetTickCount();
     frames = 0;
   }
@@ -144,7 +144,7 @@ void GLCanvas::animate(){
     last_tick_count = this_tick_count;
     args->timer += diff;
     double diff_fps_time = 0.001*(this_tick_count-last_fps_count);
-    if (diff_fps_time > 1.00) {      
+    if (diff_fps_time > 1.00) {
       float fps = frames / float(diff_fps_time);
       std::cout << "fps: " << fps << std::endl;
       frames = 0;
@@ -168,13 +168,13 @@ void GLCanvas::animate(){
     timeval this_time;
     gettimeofday(&this_time,NULL);
     // compute the difference from last time
-    double diff = this_time.tv_sec - last_time.tv_sec + 
+    double diff = this_time.tv_sec - last_time.tv_sec +
       0.000001 * (this_time.tv_usec - last_time.tv_usec);
-    double diff_fps_time = this_time.tv_sec - last_fps_time.tv_sec + 
+    double diff_fps_time = this_time.tv_sec - last_fps_time.tv_sec +
       0.000001 * (this_time.tv_usec - last_fps_time.tv_usec);
     last_time = this_time;
     // print out stats on the FPS occasionally
-    if (diff_fps_time > 1.00) {      
+    if (diff_fps_time > 1.00) {
       float fps = frames / float(diff_fps_time);
       std::cout << "fps: " << fps << std::endl;
       frames = 0;
@@ -190,7 +190,7 @@ void GLCanvas::animate(){
     //usleep (100);
   }
 #endif
-  
+
 }
 
 
@@ -270,7 +270,7 @@ void GLCanvas::mousebuttonCB(GLFWwindow *window, int which_button, int action, i
       middleMousePressed = false;
     }
   }
-}	
+}
 
 // ========================================================
 // Callback function for mouse drag
@@ -295,10 +295,10 @@ void GLCanvas::mousemotionCB(GLFWwindow *window, double x, double y) {
     }
     // allow reasonable control for a non-3 button mouse
     if (controlKeyPressed) {
-      camera->truckCamera(mouseX-x, y-mouseY);    
+      camera->truckCamera(mouseX-x, y-mouseY);
     }
     if (altKeyPressed) {
-      camera->dollyCamera(y-mouseY);    
+      camera->dollyCamera(y-mouseY);
     }
   }
   mouseX = x;
@@ -399,7 +399,7 @@ GLuint LoadShaders(const std::string &vertex_file_path,const std::string &fragme
   // Create the shaders
   GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
   GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-  
+
   // Read the Vertex Shader code from the file
   std::string VertexShaderCode;
   std::ifstream VertexShaderStream(vertex_file_path.c_str(), std::ios::in);
@@ -424,18 +424,18 @@ GLuint LoadShaders(const std::string &vertex_file_path,const std::string &fragme
     std::cerr << "ERROR: cannot open " << vertex_file_path << std::endl;
     exit(0);
   }
-  
+
   GLint Result = GL_FALSE;
- 
+
   // Compile Vertex Shader
   std::cout << "Compiling shader : " << vertex_file_path << std::endl;
   char const * VertexSourcePointer = VertexShaderCode.c_str();
   glShaderSource(VertexShaderID, 1, &VertexSourcePointer , NULL);
   glCompileShader(VertexShaderID);
- 
+
   // Check Vertex Shader
   glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
-  if (Result != GL_TRUE) {  
+  if (Result != GL_TRUE) {
     GLsizei log_length = 0;
     GLchar message[1024];
     glGetShaderInfoLog(VertexShaderID, 1024, &log_length, message);
@@ -448,10 +448,10 @@ GLuint LoadShaders(const std::string &vertex_file_path,const std::string &fragme
   char const * FragmentSourcePointer = FragmentShaderCode.c_str();
   glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer , NULL);
   glCompileShader(FragmentShaderID);
- 
+
   // Check Fragment Shader
   glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
-  if (Result != GL_TRUE) {  
+  if (Result != GL_TRUE) {
     GLsizei log_length = 0;
     GLchar message[1024];
     glGetShaderInfoLog(FragmentShaderID, 1024, &log_length, message);
@@ -465,10 +465,10 @@ GLuint LoadShaders(const std::string &vertex_file_path,const std::string &fragme
   glAttachShader(ProgramID, VertexShaderID);
   glAttachShader(ProgramID, FragmentShaderID);
   glLinkProgram(ProgramID);
- 
+
   // Check the program
   glGetProgramiv(ProgramID, GL_LINK_STATUS, &Result);
-  if (Result != GL_TRUE) {  
+  if (Result != GL_TRUE) {
     GLsizei log_length = 0;
     GLchar message[1024];
     glGetShaderInfoLog(ProgramID, 1024, &log_length, message);
