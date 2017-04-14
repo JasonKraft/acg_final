@@ -60,6 +60,12 @@ public:
   const BoundingBox& getBoundingBox() const { return bbox; }
   glm::vec3 LightPosition() const;
 
+  // ==================
+  // SPECIAL OPERATIONS
+  void chop(unsigned int index, const glm::vec3& normal, const glm::vec3& point) {
+    
+  }
+
 private:
 
   // HELPER FUNCTIONS FOR PAINT
