@@ -75,17 +75,6 @@ public:
     Vertex *v = vertices[i][j];
     assert (v != NULL);
     return v; }
-  int getVertexObjectIndex(int i) {
-    assert (i >= 0 && i < totalVertices());
-    int count = 0;
-    for (int j=0; j<numObjects(); j++) {
-      if (count + numVertices(j) > i) {
-        return j;
-      }
-      count += numVertices(j);
-    }
-    return -1;
-  }
 
   // =====
   // EDGES

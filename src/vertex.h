@@ -11,8 +11,8 @@ public:
 
   // ========================
   // CONSTRUCTOR & DESTRUCTOR
-  Vertex(int i, const glm::vec3 &pos) : position(pos), index(i) {}
-  
+  Vertex(int i, int o, const glm::vec3 &pos) : position(pos), index(i), object_index(o) {}
+
   // =========
   // ACCESSORS
   int getIndex() const { return index; }
@@ -21,13 +21,14 @@ public:
   double z() const { return position.z; }
   const glm::vec3& getPos() const { return position; }
   const glm::vec3& getGouraudNormal() const { return gouraud_normal; }
+  int getObjectIndex() const { return object_index; }
 
   // =========
   // MODIFIERS
   void setPos(const glm::vec3 &v) { position = v; }
   void clearGouraudNormal() { gouraud_normal = glm::vec3(0,0,0); }
   void incrGouraudNormal(const glm::vec3 &v) { gouraud_normal += v; }
-  void normalizeGouraudNormal() { 
+  void normalizeGouraudNormal() {
     gouraud_normal = glm::normalize(gouraud_normal); }
 
 private:
@@ -38,9 +39,13 @@ private:
   glm::vec3 gouraud_normal;
 
   // this is the index from the original .obj file.
-  // technically not part of the half-edge data structure, 
+  // technically not part of the half-edge data structure,
   // but we use it for hashing
-  int index;  
+  int index;
+
+  // this is the index of the object that this vertex belongs to in the mesh
+  // (for when obj file has multiple objects in it)
+  int object_index;
 
   // NOTE: the vertices don't know anything about adjacency.  In some
   // versions of this data structure they have a pointer to one of
@@ -51,4 +56,3 @@ private:
 // ==========================================================
 
 #endif
-

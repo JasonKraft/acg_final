@@ -43,7 +43,7 @@ Mesh::~Mesh() {
 
 Vertex* Mesh::addVertex(const glm::vec3 &position, int i) {
   int index = totalVertices();
-  Vertex *v = new Vertex(index, position);
+  Vertex *v = new Vertex(index, i, position);
   vertices[i].push_back(v);
   total_vertices++;
   if (totalVertices() == 1)
@@ -145,19 +145,14 @@ void Mesh::Load() {
   vertices.push_back(std::vector<Vertex*>());
   int faces = 0;
 
+  //in order for the rendering of multiple objects with different colors to work
+  //obj file must use groups to denote each object. group must be defined after vertices
+
   while (fgets(line, 200, objfile)) {
     int token_count = sscanf (line, "%s\n",token);
     sscanf (prevline, "%s\n", token2);
     if (token_count == -1) continue;
     a = b = c = d = e = -1;
-
-    //if this is the first line in the obj file OR
-    //if the previous line denoted a face and the current line is a vertex, then
-    //we have a new object so crete a new vector in the vector of vertices
-    // if ((!strcmp(token, "v") && !strcmp(token2, "f")) ) {
-    //   index++;
-    //   vertices.push_back( std::vector<Vertex*>() );
-    // }
 
     if (!strcmp(token,"usemtl") ||
 	!strcmp(token,"g")) {

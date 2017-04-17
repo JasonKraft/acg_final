@@ -74,8 +74,7 @@ void Mesh::SetupMesh() {
       nc = (*t)[2]->getGouraudNormal();
     }
     int start = mesh_tri_verts.size();
-    int triIndex = getVertexObjectIndex((*t)[0]->getIndex());
-    printf("object index: %d\n", triIndex);
+    int triIndex = (*t)[0]->getObjectIndex();
     mesh_tri_verts.push_back(VBOPosNormalColor(a,na,colors[triIndex]));
     mesh_tri_verts.push_back(VBOPosNormalColor(b,nb,colors[triIndex]));
     mesh_tri_verts.push_back(VBOPosNormalColor(c,nc,colors[triIndex]));
