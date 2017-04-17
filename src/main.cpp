@@ -6,7 +6,7 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-// for sleep 	
+// for sleep
 #if defined(_WIN32)
 #include <windows.h>
 #else
@@ -27,14 +27,14 @@ int main(int argc, char *argv[]) {
 
   // parse the command line arguments
   ArgParser args(argc, argv);
-  GLCanvas::initialize(&args); 
+  GLCanvas::initialize(&args);
 
   glClearColor(0.8,0.9,1.0,0.0);  // light blue sky
   glEnable(GL_DEPTH_TEST);
-  glDepthFunc(GL_LESS); 
+  glDepthFunc(GL_LESS);
 
   while (!glfwWindowShouldClose(GLCanvas::window))  {
-    
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(GLCanvas::programID);
     GLCanvas::camera->glPlaceCamera();
@@ -49,11 +49,10 @@ int main(int argc, char *argv[]) {
     glm::mat4 ProjectionMatrix = GLCanvas::camera->getProjectionMatrix();
     glm::mat4 ViewMatrix = GLCanvas::camera->getViewMatrix();
     GLCanvas::drawVBOs(ProjectionMatrix,ViewMatrix,ModelMatrix);
-    GLCanvas::animate();
     // Swap buffers
     glfwSwapBuffers(GLCanvas::window);
     fflush(stdout);
-    glfwPollEvents();  
+    glfwPollEvents();
     fflush(stdout);
 
 #if defined(_WIN32)
@@ -63,10 +62,10 @@ int main(int argc, char *argv[]) {
 #endif
 
   }
-  
+
   GLCanvas::cleanupVBOs();
   glDeleteProgram(GLCanvas::programID);
-  
+
   // Close OpenGL window and terminate GLFW
   glfwDestroyWindow(GLCanvas::window);
   glfwTerminate();
@@ -75,4 +74,3 @@ int main(int argc, char *argv[]) {
 
 // ====================================================================
 // ====================================================================
-

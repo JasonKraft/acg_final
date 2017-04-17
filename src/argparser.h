@@ -59,8 +59,6 @@ public:
           std::string(argv[i]) == std::string("-i")) {
         i++; assert (i < argc);
         separatePathAndFile(argv[i],path,input_file);
-      } else if (std::string(argv[i]) == std::string("-shader")) {
-        shader_filename = std::string(argv[i]);
       } else if (std::string(argv[i]) == std::string("-size")) {
         i++; assert (i < argc);
         width = height = atoi(argv[i]);
@@ -92,17 +90,9 @@ public:
     shader_filename = "hw4_shader";
     width = 500;
     height = 500;
-    mirror = false;
-    shadow = false;
     geometry = true;
-    reflected_geometry = false;
     bounding_box = false;
-    silhouette_edges = false;
-    shadow_polygons = false;
     gouraud_normals = false;
-    whichshader = 0;
-    timer = 0.0;
-    animate = false;
   }
 
   // ==============
@@ -115,17 +105,9 @@ public:
   std::string shader_filename;
   int width;
   int height;
-  bool shadow;
-  bool mirror;
   bool geometry;
-  bool reflected_geometry;
   bool bounding_box;
-  bool silhouette_edges;
-  bool shadow_polygons;
   bool gouraud_normals;
-  int whichshader;
-  float timer;
-  bool animate;
 };
 
 #endif

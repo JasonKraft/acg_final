@@ -96,7 +96,7 @@ public:
   // ==================
   // SPECIAL OPERATIONS
   void chop(unsigned int index, const glm::vec3& normal, const glm::vec3& point) {
-    
+
   }
 
 private:

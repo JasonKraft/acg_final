@@ -41,7 +41,6 @@ GLuint GLCanvas::ModelMatrixID;
 GLuint GLCanvas::LightID;
 GLuint GLCanvas::MatrixID;
 GLuint GLCanvas::programID;
-GLuint GLCanvas::whichshaderID;
 GLuint GLCanvas::colormodeID;
 
 
@@ -126,74 +125,6 @@ void GLCanvas::initialize(ArgParser *_args) {
 
 
 
-
-void GLCanvas::animate(){
-#if _WIN32
-  static int last_tick_count;
-  static int last_fps_count;
-  static int frames = -1;
-  if (frames == -1) {
-    last_fps_count = last_tick_count = GetTickCount();
-    frames = 0;
-  }
-  if (args->animate) {
-    frames++;
-    int this_tick_count = GetTickCount();
-    // difference in milliseconds
-    double diff = 0.001*(this_tick_count-last_tick_count);
-    last_tick_count = this_tick_count;
-    args->timer += diff;
-    double diff_fps_time = 0.001*(this_tick_count-last_fps_count);
-    if (diff_fps_time > 1.00) {
-      float fps = frames / float(diff_fps_time);
-      std::cout << "fps: " << fps << std::endl;
-      frames = 0;
-      last_fps_count = this_tick_count;
-    }
-    mesh->setupVBOs();
-  } else {
-    last_tick_count = last_fps_count = GetTickCount();
-  }
-#else
-  static timeval last_time;
-  static timeval last_fps_time;
-  static int frames = -1;
-  if (frames == -1) {
-    gettimeofday(&last_time,NULL);
-    last_fps_time = last_time;
-    frames = 0;
-  }
-  if (args->animate) {
-    frames++;
-    timeval this_time;
-    gettimeofday(&this_time,NULL);
-    // compute the difference from last time
-    double diff = this_time.tv_sec - last_time.tv_sec +
-      0.000001 * (this_time.tv_usec - last_time.tv_usec);
-    double diff_fps_time = this_time.tv_sec - last_fps_time.tv_sec +
-      0.000001 * (this_time.tv_usec - last_fps_time.tv_usec);
-    last_time = this_time;
-    // print out stats on the FPS occasionally
-    if (diff_fps_time > 1.00) {
-      float fps = frames / float(diff_fps_time);
-      std::cout << "fps: " << fps << std::endl;
-      frames = 0;
-      last_fps_time = this_time;
-    }
-    args->timer += diff;
-    mesh->setupVBOs();
-  } else {
-    gettimeofday(&last_time, NULL);
-    last_fps_time = last_time;
-    frames = 0;
-    // if we aren't animating the light source, avoid busy-waiting!
-    //usleep (100);
-  }
-#endif
-
-}
-
-
 void GLCanvas::initializeVBOs(){
   HandleGLError("enter initilizeVBOs()");
   glGenVertexArrays(1, &render_VAO);
@@ -203,7 +134,7 @@ void GLCanvas::initializeVBOs(){
   GLCanvas::ViewMatrixID = glGetUniformLocation(GLCanvas::programID, "V");
   GLCanvas::ModelMatrixID = glGetUniformLocation(GLCanvas::programID, "M");
   GLCanvas::colormodeID = glGetUniformLocation(GLCanvas::programID, "colormode");
-  GLCanvas::whichshaderID = glGetUniformLocation(GLCanvas::programID, "whichshader");
+  // GLCanvas::whichshaderID = glGetUniformLocation(GLCanvas::programID, "whichshader");
   mesh->initializeVBOs();
   HandleGLError("leaving initilizeVBOs()");
 }
@@ -332,44 +263,8 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       args->geometry = !args->geometry;
       mesh->setupVBOs();
       break;
-    case 'm': case 'M':
-      args->mirror = !args->mirror;
-      mesh->setupVBOs();
-      break;
-    case 'r': case 'R':
-      args->reflected_geometry = !args->reflected_geometry;
-      mesh->setupVBOs();
-      break;
-    case 's': case 'S':
-      args->shadow = !args->shadow;
-      mesh->setupVBOs();
-      break;
-    case 'e': case 'E':
-      args->silhouette_edges = !args->silhouette_edges;
-      mesh->setupVBOs();
-      break;
-    case 'p': case 'P':
-      args->shadow_polygons = !args->shadow_polygons;
-      mesh->setupVBOs();
-      break;
-    case 'a': case 'A':
-      args->animate = !args->animate;
-      break;
-    case ' ':
-      args->timer += 0.1;
-      mesh->setupVBOs();
-      break;
     case 'n': case 'N':
       args->gouraud_normals = !args->gouraud_normals;
-      mesh->setupVBOs();
-      break;
-    case 'x': case 'X':
-      args->whichshader = (args->whichshader+1)%4;
-      std::cout << "CURRENT SHADER: " << args->whichshader;
-      if (args->whichshader == 0) { std::cout << " none" << std::endl; }
-      if (args->whichshader == 1) { std::cout << " checkerboard" << std::endl; }
-      if (args->whichshader == 2) { std::cout << " orange" << std::endl; }
-      if (args->whichshader == 3) { std::cout << " wood" << std::endl; }
       mesh->setupVBOs();
       break;
     case 'l' : case 'L':

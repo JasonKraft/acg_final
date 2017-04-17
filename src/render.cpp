@@ -8,10 +8,7 @@
 #include "argparser.h"
 #include "utils.h"
 
-glm::vec4 floor_color(0.9,0.8,0.7,1);
 glm::vec4 mesh_color(0.8,0.8,0.8,1);
-glm::vec4 mirror_color(0.1,0.1,0.2,1);
-glm::vec4 mirror_tint(0.85,0.9,0.95,1);
 
 glm::vec4 red(1.0,0,0,1);
 glm::vec4 green(0,1,0,0.5);
@@ -29,8 +26,6 @@ glm::vec3 Mesh::LightPosition() const {
   glm::vec3 tmp;
   bbox.getCenter(tmp);
   tmp += glm::vec3(0,1.5*(max.y-min.y),0);
-  tmp += glm::vec3(cos(args->timer) * (max.x-min.x), 0, 0);
-  tmp += glm::vec3(0,0,sin(args->timer) * (max.z-min.z));
   return tmp;
 }
 
@@ -44,18 +39,11 @@ void Mesh::initializeVBOs() {
 void Mesh::cleanupVBOs() {
   glDeleteBuffers(1,&mesh_tri_verts_VBO);
   glDeleteBuffers(1,&mesh_tri_indices_VBO);
-  // glDeleteBuffers(1,&light_vert_VBO);
   bbox.cleanupVBOs();
 }
 
 // ================================================================================
 // ================================================================================
-
-// void Mesh::SetupLight(const glm::vec3 &light_position) {
-//   light_vert.push_back(VBOPosNormalColor(light_position,glm::vec3(1,0,0),glm::vec4(1,1,0,0)));
-//   glBindBuffer(GL_ARRAY_BUFFER,light_vert_VBO);
-//   glBufferData(GL_ARRAY_BUFFER,sizeof(VBOPosNormalColor)*1,&light_vert[0],GL_STATIC_DRAW);
-// }
 
 
 void Mesh::SetupMesh() {
@@ -96,22 +84,6 @@ void Mesh::SetupMesh() {
 // ================================================================================
 // ================================================================================
 
-// void Mesh::DrawLight() {
-//   HandleGLError("enter draw mirror");
-//   glPointSize(10);
-//   glBindBuffer(GL_ARRAY_BUFFER, light_vert_VBO);
-//   glEnableVertexAttribArray(0);
-//   glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,sizeof(VBOPosNormalColor),(void*)0);
-//   glEnableVertexAttribArray(1);
-//   glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,sizeof(VBOPosNormalColor),(void*)sizeof(glm::vec3) );
-//   glEnableVertexAttribArray(2);
-//   glVertexAttribPointer(2, 3, GL_FLOAT,GL_FALSE,sizeof(VBOPosNormalColor), (void*)(sizeof(glm::vec3)*2));
-//   glDrawArrays(GL_POINTS, 0, light_vert.size());
-//   glDisableVertexAttribArray(0);
-//   glDisableVertexAttribArray(1);
-//   glDisableVertexAttribArray(2);
-//   HandleGLError("enter draw mirror");
-// }
 
 void Mesh::DrawMesh() {
   HandleGLError("enter draw mesh");
@@ -140,8 +112,6 @@ void Mesh::setupVBOs() {
   mesh_tri_indices.clear();
 
   // setup the new geometry
-  // glm::vec3 light_position = LightPosition();
-  // SetupLight(light_position);
   SetupMesh();
   bbox.setupVBOs();
 }
@@ -151,9 +121,6 @@ void Mesh::drawVBOs() {
 
   // mode 1: STANDARD PHONG LIGHTING (LIGHT ON)
   glUniform1i(GLCanvas::colormodeID, 1);
-
-  // shader 0: NO SHADER
-  glUniform1i(GLCanvas::whichshaderID, 0);
 
 
   HandleGLError("enter draw vbos");
