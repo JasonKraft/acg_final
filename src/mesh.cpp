@@ -54,9 +54,9 @@ Vertex* Mesh::addVertex(const glm::vec3 &position, int i) {
 }
 
 
-void Mesh::addTriangle(Vertex *a, Vertex *b, Vertex *c) {
+void Mesh::addTriangle(Vertex *a, Vertex *b, Vertex *c, int index) {
   // create the triangle
-  Triangle *t = new Triangle();
+  Triangle *t = new Triangle(index);
   // create the edges
   Edge *ea = new Edge(a,b,t);
   Edge *eb = new Edge(b,c,t);
@@ -177,7 +177,7 @@ void Mesh::Load() {
       assert (a >= 0 && a < totalVertices());
       assert (b >= 0 && b < totalVertices());
       assert (c >= 0 && c < totalVertices());
-      addTriangle(getVertex(a),getVertex(b),getVertex(c));
+      addTriangle(getVertex(a),getVertex(b),getVertex(c), index-1);
     } else if (!strcmp(token,"vt")) {
     } else if (!strcmp(token,"vn")) {
     } else if (token[0] == '#') {
@@ -192,6 +192,57 @@ void Mesh::Load() {
   ComputeGouraudNormals();
 
   std::cout << "loaded " << numTriangles() << " triangles " << std::endl;
+}
+
+// =======================================================================
+// this function outputs scene into a very simple .obj file
+// =======================================================================
+
+void Mesh::OutputFile() {
+  printf("WRITING SCENE TO FILE\n");
+
+  std::string output_file = args->path + "/output.obj";
+
+  FILE *objfile = fopen(output_file.c_str(),"w");
+  if (objfile == NULL) {
+    std::cout << "ERROR! CANNOT OPEN '" << output_file << "'\n";
+    return;
+  }
+
+  //loop through all the vertices and write all vertices of one object
+  //after finishing the vertices of an object, create a group
+  //then loop through the indices of the faces of this object and print them
+
+  int indexStart = 0;  //index of the starting face of each object
+
+  for (unsigned int i=0; i<vertices.size(); i++) {
+    unsigned int j;
+
+    //writing the vertices in this object to the file
+    for (j=0; j<vertices[i].size(); j++) {
+      glm::vec3 vPos = vertices[i][j]->getPos();
+      fprintf(objfile, "v %.6f %.6f %.6f\n", vPos.x, vPos.y, vPos.z);
+    }
+
+    //create a group
+    //need to also check that this vector of verices isn't empty
+    if (vertices[i].size() > 0) {
+      fprintf(objfile, "g partition%d\n", i);
+    }
+
+    //writing the faces in this object to the file
+    for (j=indexStart; j<triangles.size(); j++) {
+      Triangle *t = triangles[j];
+      if (t->getObjectIndex() == (int)i) {
+        //this face is part of this object
+        //need to add 1 to index number because for vertices it starts at 1 not 0
+        fprintf(objfile, "f %d %d %d\n", (*t)[0]->getIndex()+1, (*t)[1]->getIndex()+1, (*t)[2]->getIndex()+1);
+      } else {
+        indexStart = j;
+        break;
+      }
+    }
+  }
 }
 
 // =======================================================================

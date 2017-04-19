@@ -273,6 +273,13 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       args->wireframe = !args->wireframe;
       mesh->setupVBOs();
       break;
+    case 'c': case 'C':
+      //cut the mesh into partitions for printing
+      break;
+    case 'o': case 'O':
+      //output scene into obj file
+      mesh->OutputFile();
+      break;
     case 'l' : case 'L':
       //LoadCompileLinkShaders();
       mesh->setupVBOs();

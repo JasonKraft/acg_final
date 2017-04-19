@@ -64,6 +64,9 @@ public:
         width = height = atoi(argv[i]);
       } else if (argv[i] == std::string("-wireframe")) {
         wireframe = 1;
+      } else if (argv[i] == std::string("-printing_size")) {
+        i++; assert( i < argc);
+        printing_width = printing_height = atoi(argv[i]);
       } else {
 	std::cout << "ERROR: unknown command line argument "
 		  << i << ": '" << argv[i] << "'" << std::endl;
@@ -92,6 +95,8 @@ public:
     shader_filename = "hw4_shader";
     width = 500;
     height = 500;
+    printing_width = 500;
+    printing_height = 500;
     geometry = true;
     wireframe = 0;
     bounding_box = false;
@@ -108,6 +113,8 @@ public:
   std::string shader_filename;
   int width;
   int height;
+  int printing_width;
+  int printing_height;
   bool geometry;
   GLint wireframe;
   bool bounding_box;

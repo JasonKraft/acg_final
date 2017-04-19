@@ -13,27 +13,29 @@ public:
 
   // ========================
   // CONSTRUCTOR & DESTRUCTOR
-  Triangle() {
-    edge = NULL; 
+  Triangle(int _objectIndex) {
+    edge = NULL;
     id = next_triangle_id;
     next_triangle_id++;
+    objectIndex = _objectIndex;
   }
   ~Triangle() {}
 
   // =========
   // ACCESSORS
-  Vertex* operator[](int i) const { 
+  Vertex* operator[](int i) const {
     assert (edge != NULL);
     if (i==0) return edge->getStartVertex();
     if (i==1) return edge->getNext()->getStartVertex();
     if (i==2) return edge->getNext()->getNext()->getStartVertex();
     assert(0);
   }
-  Edge* getEdge() { 
+  Edge* getEdge() {
     assert (edge != NULL);
-    return edge; 
+    return edge;
   }
   int getID() { return id; }
+  int getObjectIndex() { return objectIndex; }
 
   // =========
   // MODIFIERS
@@ -48,6 +50,7 @@ protected:
   // REPRESENTATION
   Edge *edge;
   int id;
+  int objectIndex;
 
   static int next_triangle_id;
 };

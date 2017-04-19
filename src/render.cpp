@@ -167,8 +167,6 @@ void Mesh::SetupMesh() {
 	       sizeof(VBOIndexedTri) * mesh_tri_indices.size(),
 	       &mesh_tri_indices[0], GL_STATIC_DRAW);
 
-  num_mini_triangles = mesh_tri_verts.size();
-
 }
 
 

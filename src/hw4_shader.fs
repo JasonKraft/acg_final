@@ -29,15 +29,11 @@ void main(){
 
   //wireframe shading
   if (wireframe == 1) {
-    if ( (wireframe == 0) ) {
-      MaterialDiffuseColor = myColor;
-    } else {
       if (myColor.x < 0.1 &&
           myColor.y < 0.1 &&
           myColor.z < 0.1) {
         MaterialDiffuseColor *= 0.6 * vec3(1,1,1);
       }
-    }
   }
 
   //this creates the nice wireframe but also makes everything gray

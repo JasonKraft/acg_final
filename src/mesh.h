@@ -85,7 +85,7 @@ public:
   // =========
   // TRIANGLES
   int numTriangles() const { return triangles.size(); }
-  void addTriangle(Vertex *a, Vertex *b, Vertex *c);
+  void addTriangle(Vertex *a, Vertex *b, Vertex *c, int index);
   void removeTriangle(Triangle *t);
 
   // ===============
@@ -99,6 +99,7 @@ public:
 
   }
 
+  // function that helps with doing the wireframe stuff
   void TriVBOHelper( const glm::vec3 &pos_a,
                      const glm::vec3 &pos_b,
                      const glm::vec3 &pos_c,
@@ -109,6 +110,9 @@ public:
                      const glm::vec4 &color_bc,
                      const glm::vec4 &color_ca,
                      const glm::vec4 &center_color);
+
+  // function to output scene into obj file
+  void OutputFile();
 
 private:
 
@@ -128,7 +132,6 @@ private:
   BoundingBox bbox;
   std::vector<glm::vec4> colors;  //pre-defined colors for different objects in mesh
   int total_vertices;
-  int num_mini_triangles;
 
   // VBOs
   GLuint mesh_tri_verts_VBO;
