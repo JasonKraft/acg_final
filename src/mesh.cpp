@@ -142,8 +142,8 @@ void Mesh::Load() {
   int index = 0;
   int vert_count = 0;
   int vert_index = 1;
+
   vertices.push_back(std::vector<Vertex*>());
-  int faces = 0;
 
   //in order for the rendering of multiple objects with different colors to work
   //obj file must use groups to denote each object. group must be defined after vertices
@@ -178,7 +178,6 @@ void Mesh::Load() {
       assert (b >= 0 && b < totalVertices());
       assert (c >= 0 && c < totalVertices());
       addTriangle(getVertex(a),getVertex(b),getVertex(c));
-      faces++;
     } else if (!strcmp(token,"vt")) {
     } else if (!strcmp(token,"vn")) {
     } else if (token[0] == '#') {

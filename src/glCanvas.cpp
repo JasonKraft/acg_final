@@ -42,6 +42,7 @@ GLuint GLCanvas::LightID;
 GLuint GLCanvas::MatrixID;
 GLuint GLCanvas::programID;
 GLuint GLCanvas::colormodeID;
+GLuint GLCanvas::wireframeID;
 
 
 // ========================================================
@@ -134,7 +135,8 @@ void GLCanvas::initializeVBOs(){
   GLCanvas::ViewMatrixID = glGetUniformLocation(GLCanvas::programID, "V");
   GLCanvas::ModelMatrixID = glGetUniformLocation(GLCanvas::programID, "M");
   GLCanvas::colormodeID = glGetUniformLocation(GLCanvas::programID, "colormode");
-  // GLCanvas::whichshaderID = glGetUniformLocation(GLCanvas::programID, "whichshader");
+  GLCanvas::wireframeID = glGetUniformLocation(GLCanvas::programID, "wireframe");
+
   mesh->initializeVBOs();
   HandleGLError("leaving initilizeVBOs()");
 }
@@ -265,6 +267,10 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       break;
     case 'n': case 'N':
       args->gouraud_normals = !args->gouraud_normals;
+      mesh->setupVBOs();
+      break;
+    case 'w': case 'W':
+      args->wireframe = !args->wireframe;
       mesh->setupVBOs();
       break;
     case 'l' : case 'L':

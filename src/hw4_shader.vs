@@ -18,6 +18,8 @@ uniform mat4 V;
 uniform mat4 M;
 uniform vec3 LightPosition_worldspace;
 
+uniform int wireframe;
+
 void main(){
 
   // Output position of the vertex, in clip space : MVP * position

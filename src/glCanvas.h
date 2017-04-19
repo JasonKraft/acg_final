@@ -1,7 +1,7 @@
 #ifndef _GL_CANVAS_H_
 #define _GL_CANVAS_H_
 
-#define _USE_MATH_DEFINES 
+#define _USE_MATH_DEFINES
 #include <cmath>
 
 // Graphics Library Includes
@@ -44,7 +44,7 @@ public:
   static GLuint MatrixID;
   static GLuint programID;
   static GLuint colormodeID;
-  static GLuint whichshaderID;
+  static GLuint wireframeID;
 
   // mouse position
   static int mouseX;

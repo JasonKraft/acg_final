@@ -99,6 +99,17 @@ public:
 
   }
 
+  void TriVBOHelper( const glm::vec3 &pos_a,
+                     const glm::vec3 &pos_b,
+                     const glm::vec3 &pos_c,
+                     const glm::vec3 &normal_a,
+                     const glm::vec3 &normal_b,
+                     const glm::vec3 &normal_c,
+                     const glm::vec4 &color_ab,
+                     const glm::vec4 &color_bc,
+                     const glm::vec4 &color_ca,
+                     const glm::vec4 &center_color);
+
 private:
 
   // HELPER FUNCTIONS FOR PAINT
@@ -117,15 +128,14 @@ private:
   BoundingBox bbox;
   std::vector<glm::vec4> colors;  //pre-defined colors for different objects in mesh
   int total_vertices;
+  int num_mini_triangles;
 
   // VBOs
   GLuint mesh_tri_verts_VBO;
   GLuint mesh_tri_indices_VBO;
-  // GLuint light_vert_VBO;
 
   std::vector<VBOPosNormalColor> mesh_tri_verts;
   std::vector<VBOIndexedTri> mesh_tri_indices;
-  // std::vector<VBOPosNormalColor> light_vert;
 
 };
 

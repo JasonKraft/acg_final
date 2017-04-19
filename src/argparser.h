@@ -62,6 +62,8 @@ public:
       } else if (std::string(argv[i]) == std::string("-size")) {
         i++; assert (i < argc);
         width = height = atoi(argv[i]);
+      } else if (argv[i] == std::string("-wireframe")) {
+        wireframe = 1;
       } else {
 	std::cout << "ERROR: unknown command line argument "
 		  << i << ": '" << argv[i] << "'" << std::endl;
@@ -91,6 +93,7 @@ public:
     width = 500;
     height = 500;
     geometry = true;
+    wireframe = 0;
     bounding_box = false;
     gouraud_normals = false;
   }
@@ -106,6 +109,7 @@ public:
   int width;
   int height;
   bool geometry;
+  GLint wireframe;
   bool bounding_box;
   bool gouraud_normals;
 };

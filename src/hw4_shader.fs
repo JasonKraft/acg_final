@@ -12,6 +12,7 @@ out vec3 color;
 // Values that stay constant for the whole mesh.
 uniform vec3 LightPosition_worldspace;
 uniform int colormode;
+uniform int wireframe;
 
 
 // ----------------------------------------------
@@ -25,6 +26,33 @@ void main(){
 
   // Material properties
   vec3 MaterialDiffuseColor = myColor;
+
+  //wireframe shading
+  if (wireframe == 1) {
+    if ( (wireframe == 0) ) {
+      MaterialDiffuseColor = myColor;
+    } else {
+      if (myColor.x < 0.1 &&
+          myColor.y < 0.1 &&
+          myColor.z < 0.1) {
+        MaterialDiffuseColor *= 0.6 * vec3(1,1,1);
+      }
+    }
+  }
+
+  //this creates the nice wireframe but also makes everything gray
+  // if ( (wireframe == 0) ||
+  //      ( myColor.x > 0.1 &&
+  //        myColor.y > 0.1 &&
+  //        myColor.z > 0.1) ) {
+  //   MaterialDiffuseColor = 0.6 * vec3(1,1,1);
+  // } else {
+  //   if (myColor.x < 0.1 &&
+  //       myColor.y < 0.1 &&
+  //       myColor.z < 0.1) {
+  //     MaterialDiffuseColor *= 7.0;
+  //   }
+  // }
 
   vec3 MaterialAmbientColor = vec3(0.3,0.3,0.3) * MaterialDiffuseColor;
   vec3 MaterialSpecularColor = vec3(0.3,0.3,0.3);
@@ -75,4 +103,5 @@ void main(){
     // mode 2: AMBIENT ONLY (LIGHT OFF)
     color = MaterialAmbientColor;
   }
+
 }
