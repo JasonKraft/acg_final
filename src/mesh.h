@@ -17,7 +17,7 @@ class Triangle;
 // ======================================================================
 
 class Mesh {
-
+  friend class BSPTree;
 public:
 
   // ========================
@@ -74,10 +74,6 @@ public:
   // OTHER ACCESSORS
   const BoundingBox& getBoundingBox() const { return bbox; }
   glm::vec3 LightPosition() const;
-
-  // ==================
-  // SPECIAL OPERATIONS
-  void chop(unsigned int index, const glm::vec3& normal, float offset);
 
   // function that helps with doing the wireframe stuff
   void TriVBOHelper( const glm::vec3 &pos_a,

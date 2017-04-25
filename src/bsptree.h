@@ -32,9 +32,7 @@ public:
 	void setNormal(const glm::vec3& n) { normal = n; }
 
 	// SPECIAL FUNCTIONS
-	void Load() {
-		printf("hello, world!\n");
-		myMesh.Load(); }
+	void Load() { myMesh.Load(); }
 	const BoundingBox& getBoundingBox() const { return myMesh.getBoundingBox(); }
 	void initializeVBOs() {
 		myMesh.initializeVBOs();
@@ -61,12 +59,15 @@ public:
 		if (rightChild != NULL) { rightChild->cleanupVBOs(); }
 	}
 	glm::vec3 LightPosition() const { return myMesh.LightPosition(); }
-
+	void chop(const glm::vec3& normal, float offset);
 
 	BSPTree* leftChild;
 	BSPTree* rightChild;
 
 private:
+	float CastRay(const glm::vec3& dir, const glm::vec3& origin, const glm::vec3& normal, float offset) const;
+	void addTriangle(glm::vec3 a, glm::vec3 b, glm::vec3 c);
+
 	ArgParser *args;
 	unsigned int depth;
 

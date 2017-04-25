@@ -269,6 +269,8 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
     glfwSetWindowShouldClose(GLCanvas::window, GL_TRUE);
   }
 
+  int tempWire;
+
   // other normal ascii keys...
   if ( (action == GLFW_PRESS || action == GLFW_REPEAT) && key < 256) {
     switch (key) {
@@ -294,6 +296,14 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       break;
     case 'c': case 'C':
       //cut the mesh into partitions for printing
+      tempWire = args->wireframe;
+      args->wireframe = 0;
+      tree->setupVBOs();
+      tree->chop(glm::vec3(1.0f, 0.0f, 0.0f), 0.0);
+      tree->initializeVBOs();
+      tree->setupVBOs();
+      args->wireframe = tempWire;
+      tree->setupVBOs();
       break;
     case 'o': case 'O':
       //output scene into obj file

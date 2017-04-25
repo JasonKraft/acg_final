@@ -3,51 +3,51 @@ function chop(index, normal, offest)
 	for each triangle t in m
 		get the distance of each vertex of t to the plane
 		if each vertex distance is >= 0
-			add triangle to right submesh (meshes[index+1])
+			add triangle to right submesh (rightChild)
 		else if each vertex distance is <= 0
-			add triangle to left submesh (meshes[index+2])
+			add triangle to left submesh (leftChild)
 		else
 			vector Vab, Vbc, Vca
-			vector anew = a + norm(Vab) * castRay(norm(Vab), normal, offset)
-			vector bnew = b + norm(Vbc) * castRay(norm(Vbc), normal, offset)
-			vector cnew = c + norm(Vca) * castRay(norm(Vca), normal, offset)
+			vector aint = a + norm(Vab) * castRay(norm(Vab), normal, offset)
+			vector bint = b + norm(Vbc) * castRay(norm(Vbc), normal, offset)
+			vector cint = c + norm(Vca) * castRay(norm(Vca), normal, offset)
 			vector p1, p2
 			if a is left and b and c are right
-				p1 = anew
-				p2 = cnew
-				meshes[index+1] += triangle(b,p2,p1)
-				meshes[index+1] += triangle(c,p2,b)
-				meshes[index+2] += triangle(a,p1,p2)
-			if b is left and a and c are right
-				p1 = anew
-				p2 = bnew
-				meshes[index+1] += triangle(a,p1,p2)
-				meshes[index+1] += triangle(c,a,p2)
-				meshes[index+2] += triangle(b,p2,p1)
-			if c is left and a and b are right
-				p1 = bnew
-				p2 = cnew
-				meshes[index+1] += triangle(b,p1,p2)
-				meshes[index+1] += triangle(a,b,p2)
-				meshes[index+2] += triangle(c,p2,p1)
-			if a is right and b and c are left
-				p1 = anew
-				p2 = cnew
-				meshes[index+1] += triangle(a,p1,p2)
-				meshes[index+2] += triangle(b,p2,p1)
-				meshes[index+2] += tirangle(c,p2,b)
-			if b is right and a and c are left
-				p1 = bnew
-				p2 = anew
-				meshes[index+1] += triangle(b,p1,p2)
-				meshes[index+2] += triangle(c,p2,p1)
-				meshes[index+2] += triangle(a,p2,c)
+				p1 = aint
+				p2 = cint
+				rightChild += triangle(b,p2,p1)
+				rightChild += triangle(c,p2,b)
+				leftChild += triangle(a,p1,p2)
+>			if b is left and a and c are right
+				p1 = aint
+				p2 = bint
+				rightChild += triangle(a,p1,p2)
+				rightChild += triangle(c,a,p2)
+				leftChild += triangle(b,p2,p1)
+>			if c is left and a and b are right
+				p1 = bint
+				p2 = cint
+				rightChild += triangle(b,p1,p2)
+				rightChild += triangle(a,b,p2)
+				leftChild += triangle(c,p2,p1)
+>			if a is right and b and c are left
+				p1 = aint
+				p2 = cint
+				rightChild += triangle(a,p1,p2)
+				leftChild += triangle(b,p2,p1)
+				leftChild += triangle(c,p2,b)
+>			if b is right and a and c are left
+				p1 = bint
+				p2 = aint
+				rightChild += triangle(b,p1,p2)
+				leftChild += triangle(c,p2,p1)
+				leftChild += triangle(a,p2,c)
 			if c is right and a and b are left
-				p1 = cnew
-				p2 = bnew
-				meshes[index+1] += triangle(c,p1,p2)
-				meshes[index+2] += triangle(a,p2,p1)
-				meshes[index+2] += triangle(b,p2,a)
+				p1 = cint
+				p2 = bint
+				rightChild += triangle(c,p1,p2)
+				leftChild += triangle(a,p2,p1)
+				leftChild += triangle(b,p2,a)
 	iterate through the edges of each submesh
 		find an edge e with no opposite edge
 			Edge[] E = {e}

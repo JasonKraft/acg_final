@@ -11,7 +11,7 @@
 int Triangle::next_triangle_id = 0;
 
 // =======================================================================
-// MESH DESTRUCTOR 
+// MESH DESTRUCTOR
 // =======================================================================
 
 Mesh::~Mesh() {
@@ -44,7 +44,7 @@ Vertex* Mesh::addVertex(const glm::vec3 &position) {
   vertices.push_back(v);
   if (numVertices() == 1)
     bbox = BoundingBox(position,position);
-  else 
+  else
     bbox.Extend(position);
   return v;
 }
@@ -63,7 +63,7 @@ void Mesh::addTriangle(Vertex *a, Vertex *b, Vertex *c) {
   ea->setNext(eb);
   eb->setNext(ec);
   ec->setNext(ea);
-  // verify these edges aren't already in the mesh 
+  // verify these edges aren't already in the mesh
   // (which would be a bug, or a non-manifold mesh)
   assert (edges.find(std::make_pair(a,b)) == edges.end());
   assert (edges.find(std::make_pair(b,c)) == edges.end());
@@ -73,9 +73,9 @@ void Mesh::addTriangle(Vertex *a, Vertex *b, Vertex *c) {
   edges[std::make_pair(b,c)] = eb;
   edges[std::make_pair(c,a)] = ec;
   // connect up with opposite edges (if they exist)
-  edgeshashtype::iterator ea_op = edges.find(std::make_pair(b,a)); 
-  edgeshashtype::iterator eb_op = edges.find(std::make_pair(c,b)); 
-  edgeshashtype::iterator ec_op = edges.find(std::make_pair(a,c)); 
+  edgeshashtype::iterator ea_op = edges.find(std::make_pair(b,a));
+  edgeshashtype::iterator eb_op = edges.find(std::make_pair(c,b));
+  edgeshashtype::iterator ec_op = edges.find(std::make_pair(a,c));
   if (ea_op != edges.end()) { ea_op->second->setOpposite(ea); }
   if (eb_op != edges.end()) { eb_op->second->setOpposite(eb); }
   if (ec_op != edges.end()) { ec_op->second->setOpposite(ec); }
@@ -93,9 +93,9 @@ void Mesh::removeTriangle(Triangle *t) {
   Vertex *b = eb->getStartVertex();
   Vertex *c = ec->getStartVertex();
   // remove these elements from master lists
-  edges.erase(std::make_pair(a,b)); 
-  edges.erase(std::make_pair(b,c)); 
-  edges.erase(std::make_pair(c,a)); 
+  edges.erase(std::make_pair(a,b));
+  edges.erase(std::make_pair(b,c));
+  edges.erase(std::make_pair(c,a));
   triangles.erase(t->getID());
   // clean up memory
   delete ea;
@@ -118,7 +118,7 @@ Edge* Mesh::getMeshEdge(Vertex *a, Vertex *b) const {
 
 void Mesh::Load() {
   std::string input_file = args->path + "/" + args->input_file;
-  
+
   FILE *objfile = fopen(input_file.c_str(),"r");
   if (objfile == NULL) {
     std::cout << "ERROR! CANNOT OPEN '" << input_file << "'\n";
@@ -132,18 +132,18 @@ void Mesh::Load() {
   char ctoken[100] = "";
   float x,y,z;
   int a,b,c,d,e;
-  
+
   int index = 0;
   int vert_count = 0;
   int vert_index = 1;
-  
-  while (fgets(line, 200, objfile)) {   
+
+  while (fgets(line, 200, objfile)) {
     int token_count = sscanf (line, "%s\n",token);
     if (token_count == -1) continue;
     a = b = c = d = e = -1;
     if (!strcmp(token,"usemtl") ||
 	!strcmp(token,"g")) {
-      vert_index = 1; 
+      vert_index = 1;
       index++;
     } else if (!strcmp(token,"v")) {
       vert_count++;
@@ -162,7 +162,7 @@ void Mesh::Load() {
       assert (a >= 0 && a < numVertices());
       assert (b >= 0 && b < numVertices());
       assert (c >= 0 && c < numVertices());
-      addTriangle(getVertex(a),getVertex(b),getVertex(c)); 
+      addTriangle(getVertex(a),getVertex(b),getVertex(c));
     } else if (!strcmp(token,"vt")) {
     } else if (!strcmp(token,"vn")) {
     } else if (token[0] == '#') {
