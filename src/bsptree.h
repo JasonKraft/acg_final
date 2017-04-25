@@ -9,13 +9,12 @@
 
 class BSPTree {
 public:
-	BSPTree(glm::vec3 _normal, glm::vec3 _position, unsigned int _leftIndex,
+	BSPTree(glm::vec3 _normal, float _offset, unsigned int _leftIndex,
 			unsigned int _rightIndex, unsigned int _depth = 0, BSPTree* _leftChild = NULL,
 			BSPTree* _rightChild = NULL) {
 		depth = _depth;
-		children = std::vector<BSPTree*>();
 		normal = _normal;
-		position = _position;
+		offset = _offset;
 		leftIndex = _leftIndex;
 		rightIndex = _rightIndex;
 		leftChild = _leftChild;
@@ -25,7 +24,7 @@ public:
 
 	// ACCESSORS
 	const glm::vec3& getNormal() const { return normal; }
-	const glm::vec3& getPosition() const { return position; }
+	float getOffset() const { return offset; }
 	unsigned int getDepth() const { return depth; }
 	bool isLeaf() const {
 		if (leftChild == NULL && rightChild == NULL) return true;
@@ -44,6 +43,9 @@ private:
 	// these indices correspond to indices in our mesh vector
 	unsigned int leftIndex;
 	unsigned int rightIndex;
+
+	glm::vec3 normal;
+	float offset;
 };
 
 #endif

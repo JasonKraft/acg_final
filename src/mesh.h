@@ -38,6 +38,8 @@ public:
     };
     colors.insert(colors.end(), &colorsArray[0], &colorsArray[10]);
     total_vertices = 0;
+    total_triangles = 0;
+    total_edges = 0;
 
   }
   ~Mesh();
@@ -80,13 +82,13 @@ public:
   // EDGES
   int numEdges() const { return edges.size(); }
   // this efficiently looks for an edge with the given vertices, using a hash table
-  Edge* getMeshEdge(Vertex *a, Vertex *b) const;
+  Edge* getMeshEdge(Vertex *a, Vertex *b, int index) const;
 
   // =========
   // TRIANGLES
-  int numTriangles() const { return triangles.size(); }
+  int numTriangles() const { return total_triangles; }
   void addTriangle(Vertex *a, Vertex *b, Vertex *c, int index);
-  void removeTriangle(Triangle *t);
+  void removeTriangle(Triangle *t, int i);
 
   // ===============
   // OTHER ACCESSORS
@@ -95,9 +97,7 @@ public:
 
   // ==================
   // SPECIAL OPERATIONS
-  void chop(unsigned int index, const glm::vec3& normal, const glm::vec3& point) {
-
-  }
+  void chop(unsigned int index, const glm::vec3& normal, float offset);
 
   // function that helps with doing the wireframe stuff
   void TriVBOHelper( const glm::vec3 &pos_a,
@@ -127,11 +127,13 @@ private:
   // REPRESENTATION
   ArgParser *args;
   std::vector<std::vector<Vertex*> > vertices;  //each vector of vertices reps an object
-  edgeshashtype edges;
-  triangleshashtype triangles;
+  std::vector<edgeshashtype> edges;
+  std::vector<triangleshashtype> triangles;
   BoundingBox bbox;
   std::vector<glm::vec4> colors;  //pre-defined colors for different objects in mesh
   int total_vertices;
+  int total_triangles;
+  int total_edges;
 
   // VBOs
   GLuint mesh_tri_verts_VBO;

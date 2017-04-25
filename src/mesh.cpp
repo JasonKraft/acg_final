@@ -16,15 +16,17 @@ int Triangle::next_triangle_id = 0;
 
 Mesh::~Mesh() {
   // delete all the triangles
-  std::vector<Triangle*> todo;
-  for (triangleshashtype::iterator iter = triangles.begin();
-       iter != triangles.end(); iter++) {
-    Triangle *t = iter->second;
-    todo.push_back(t);
+  std::vector< std::pair<Triangle*,int> > todo;
+  for (int i = 0; i < triangles.size(); i++) {
+    for (triangleshashtype::iterator iter = triangles[i].begin();
+         iter != triangles[i].end(); iter++) {
+      Triangle *t = iter->second;
+      todo.push_back(std::make_pair(t,i));
+    }
   }
   int num_triangles = todo.size();
   for (int i = 0; i < num_triangles; i++) {
-    removeTriangle(todo[i]);
+    removeTriangle(todo[i].first,todo[i].second);
   }
   // delete all the vertices
   int num_objects = numObjects();
@@ -69,27 +71,27 @@ void Mesh::addTriangle(Vertex *a, Vertex *b, Vertex *c, int index) {
   ec->setNext(ea);
   // verify these edges aren't already in the mesh
   // (which would be a bug, or a non-manifold mesh)
-  assert (edges.find(std::make_pair(a,b)) == edges.end());
-  assert (edges.find(std::make_pair(b,c)) == edges.end());
-  assert (edges.find(std::make_pair(c,a)) == edges.end());
+  assert (edges[index].find(std::make_pair(a,b)) == edges[index].end());
+  assert (edges[index].find(std::make_pair(b,c)) == edges[index].end());
+  assert (edges[index].find(std::make_pair(c,a)) == edges[index].end());
   // add the edges to the master list
-  edges[std::make_pair(a,b)] = ea;
-  edges[std::make_pair(b,c)] = eb;
-  edges[std::make_pair(c,a)] = ec;
+  edges[index][std::make_pair(a,b)] = ea;
+  edges[index][std::make_pair(b,c)] = eb;
+  edges[index][std::make_pair(c,a)] = ec;
   // connect up with opposite edges (if they exist)
-  edgeshashtype::iterator ea_op = edges.find(std::make_pair(b,a));
-  edgeshashtype::iterator eb_op = edges.find(std::make_pair(c,b));
-  edgeshashtype::iterator ec_op = edges.find(std::make_pair(a,c));
-  if (ea_op != edges.end()) { ea_op->second->setOpposite(ea); }
-  if (eb_op != edges.end()) { eb_op->second->setOpposite(eb); }
-  if (ec_op != edges.end()) { ec_op->second->setOpposite(ec); }
+  edgeshashtype::iterator ea_op = edges[index].find(std::make_pair(b,a));
+  edgeshashtype::iterator eb_op = edges[index].find(std::make_pair(c,b));
+  edgeshashtype::iterator ec_op = edges[index].find(std::make_pair(a,c));
+  if (ea_op != edges[index].end()) { ea_op->second->setOpposite(ea); }
+  if (eb_op != edges[index].end()) { eb_op->second->setOpposite(eb); }
+  if (ec_op != edges[index].end()) { ec_op->second->setOpposite(ec); }
   // add the triangle to the master list
-  assert (triangles.find(t->getID()) == triangles.end());
-  triangles[t->getID()] = t;
+  assert (triangles[index].find(t->getID()) == triangles[index].end());
+  triangles[index][t->getID()] = t;
 }
 
 
-void Mesh::removeTriangle(Triangle *t) {
+void Mesh::removeTriangle(Triangle *t, int i) {
   Edge *ea = t->getEdge();
   Edge *eb = ea->getNext();
   Edge *ec = eb->getNext();
@@ -97,10 +99,10 @@ void Mesh::removeTriangle(Triangle *t) {
   Vertex *b = eb->getStartVertex();
   Vertex *c = ec->getStartVertex();
   // remove these elements from master lists
-  edges.erase(std::make_pair(a,b));
-  edges.erase(std::make_pair(b,c));
-  edges.erase(std::make_pair(c,a));
-  triangles.erase(t->getID());
+  edges[i].erase(std::make_pair(a,b));
+  edges[i].erase(std::make_pair(b,c));
+  edges[i].erase(std::make_pair(c,a));
+  triangles[i].erase(t->getID());
   // clean up memory
   delete ea;
   delete eb;
@@ -110,9 +112,9 @@ void Mesh::removeTriangle(Triangle *t) {
 
 
 // Helper function for accessing data in the hash table
-Edge* Mesh::getMeshEdge(Vertex *a, Vertex *b) const {
-  edgeshashtype::const_iterator iter = edges.find(std::make_pair(a,b));
-  if (iter == edges.end()) return NULL;
+Edge* Mesh::getMeshEdge(Vertex *a, Vertex *b, int index) const {
+  edgeshashtype::const_iterator iter = edges[index].find(std::make_pair(a,b));
+  if (iter == edges[index].end()) return NULL;
   return iter->second;
 }
 
@@ -143,7 +145,10 @@ void Mesh::Load() {
   int vert_count = 0;
   int vert_index = 1;
 
+  assert(vertices.size() == 0);
+
   vertices.push_back(std::vector<Vertex*>());
+
 
   //in order for the rendering of multiple objects with different colors to work
   //obj file must use groups to denote each object. group must be defined after vertices
@@ -159,6 +164,8 @@ void Mesh::Load() {
       vert_index = 1;
       index++;
       vertices.push_back( std::vector<Vertex*>() );
+      edges.push_back(edgeshashtype());
+      triangles.push_back(triangleshashtype());
     } else if (!strcmp(token,"v")) {
       vert_count++;
       sscanf (line, "%s %f %f %f\n",token,&x,&y,&z);
@@ -272,3 +279,52 @@ void Mesh::ComputeGouraudNormals() {
 }
 
 // =================================================================
+
+// function chop(index, normal, offest)
+// 	Mesh m = meshes[index]
+// 	for each triangle t in m
+// 		get the distance of each vertex of t to the plane
+// 		if each vertex distance is >= 0
+// 			add triangle to right submesh (meshes[index+1])
+// 		else if each vertex distance is <= 0
+// 			add triangle to left submesh (meshes[index+2])
+// 		else
+// 			vector Vab, Vbc, Vca
+// 			vector anew = a + norm(Vab) * castRay(norm(Vab), normal, offset)
+// 			vector bnew = b + norm(Vbc) * castRay(norm(Vbc), normal, offset)
+// 			vector cnew = c + norm(Vca) * castRay(norm(Vca), normal, offset)
+// 			vector p1, p2
+// 			if a is left and b and c are right
+// 				p1 = anew
+// 				p2 = cnew
+// 				meshes[index+1] += triangle(b,p2,p1)
+// 				meshes[index+1] += triangle(c,p2,b)
+// 				meshes[index+2] += triangle(a,p1,p2)
+// 			if b is left and a and c are right
+// 				p1 = anew
+// 				p2 = bnew
+// 				meshes[index+1] += triangle(a,p1,p2)
+// 				meshes[index+1] += triangle(c,a,p2)
+// 				meshes[index+2] += triangle(b,p2,p1)
+// 			if c is left and a and b are right
+// 				p1 = bnew
+// 				p2 = cnew
+// 				meshes[index+1] += triangle(b,p1,p2)
+// 				meshes[index+1] += triangle(a,b,p2)
+// 				meshes[index+2] += triangle(c,p2,p1)
+// 			if a is right and b and c are left
+// 				p1 = anew
+// 				p2 = cnew
+// 				meshes[index+1] += triangle(a,p1,p2)
+// 				meshes[index+2] += triangle(b,p2,p1)
+// 				meshes[index+2] += tirangle(c,p2,b)
+// 			if b is right and a and c are left
+// 				p1 = bnew
+// 				p2 = anew
+// 				meshes[index+1] += triangle
+
+void Mesh::chop(unsigned int index, const glm::vec3& normal, float offset) {
+  // for (unsigned int i = 0; i < vertices[i].size(); i += 3) {
+  //   glm::vec3
+  // }
+}

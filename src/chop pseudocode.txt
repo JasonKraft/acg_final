@@ -1,0 +1,55 @@
+function chop(index, normal, offest)
+	Mesh m = meshes[index]
+	for each triangle t in m
+		get the distance of each vertex of t to the plane
+		if each vertex distance is >= 0
+			add triangle to right submesh (meshes[index+1])
+		else if each vertex distance is <= 0
+			add triangle to left submesh (meshes[index+2])
+		else
+			vector Vab, Vbc, Vca
+			vector anew = a + norm(Vab) * castRay(norm(Vab), normal, offset)
+			vector bnew = b + norm(Vbc) * castRay(norm(Vbc), normal, offset)
+			vector cnew = c + norm(Vca) * castRay(norm(Vca), normal, offset)
+			vector p1, p2
+			if a is left and b and c are right
+				p1 = anew
+				p2 = cnew
+				meshes[index+1] += triangle(b,p2,p1)
+				meshes[index+1] += triangle(c,p2,b)
+				meshes[index+2] += triangle(a,p1,p2)
+			if b is left and a and c are right
+				p1 = anew
+				p2 = bnew
+				meshes[index+1] += triangle(a,p1,p2)
+				meshes[index+1] += triangle(c,a,p2)
+				meshes[index+2] += triangle(b,p2,p1)
+			if c is left and a and b are right
+				p1 = bnew
+				p2 = cnew
+				meshes[index+1] += triangle(b,p1,p2)
+				meshes[index+1] += triangle(a,b,p2)
+				meshes[index+2] += triangle(c,p2,p1)
+			if a is right and b and c are left
+				p1 = anew
+				p2 = cnew
+				meshes[index+1] += triangle(a,p1,p2)
+				meshes[index+2] += triangle(b,p2,p1)
+				meshes[index+2] += tirangle(c,p2,b)
+			if b is right and a and c are left
+				p1 = bnew
+				p2 = anew
+				meshes[index+1] += triangle(b,p1,p2)
+				meshes[index+2] += triangle(c,p2,p1)
+				meshes[index+2] += triangle(a,p2,c)
+			if c is right and a and b are left
+				p1 = cnew
+				p2 = bnew
+				meshes[index+1] += triangle(c,p1,p2)
+				meshes[index+2] += triangle(a,p2,p1)
+				meshes[index+2] += triangle(b,p2,a)
+	iterate through the edges of each submesh
+		find an edge e with no opposite edge
+			Edge[] E = {e}
+			traverse along the open face, adding more open edges to E
+			close edges by adding triangles

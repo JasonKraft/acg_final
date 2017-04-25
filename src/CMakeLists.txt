@@ -17,6 +17,8 @@ add_executable(${my_executable}
   render.cpp
   boundingbox.cpp
   utils.cpp
+  bsptree.cpp
+  bsptree.h
   utils.h
   argparser.h
   camera.h
