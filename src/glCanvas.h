@@ -19,8 +19,8 @@
 
 class ArgParser;
 class Camera;
-
-class Mesh;
+class BSPTree;
+// class Mesh;
 
 // ====================================================================
 // NOTE:  All the methods and variables of this class are static
@@ -32,7 +32,8 @@ public:
 
   // various static variables
   static ArgParser *args;
-  static Mesh *mesh;
+  // static Mesh *mesh;
+  static BSPTree *tree;
 
   static BoundingBox bbox;
   static Camera* camera;

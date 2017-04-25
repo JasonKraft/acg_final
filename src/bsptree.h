@@ -4,22 +4,18 @@
 #include <cstdlib>
 #include <vector>
 #include "glCanvas.h"
+#include "mesh.h"
 
 // A hierarchical spatial data structure to store partitions of our mesh.
 
 class BSPTree {
 public:
-	BSPTree(glm::vec3 _normal, float _offset, unsigned int _leftIndex,
-			unsigned int _rightIndex, unsigned int _depth = 0, BSPTree* _leftChild = NULL,
-			BSPTree* _rightChild = NULL) {
+	BSPTree(ArgParser *_args, unsigned int _depth = 0) : myMesh(_args) {
+		args = _args;
 		depth = _depth;
-		normal = _normal;
-		offset = _offset;
-		leftIndex = _leftIndex;
-		rightIndex = _rightIndex;
-		leftChild = _leftChild;
-		rightChild = _rightChild;
+		leftChild = rightChild = NULL;
 	}
+
 	~BSPTree();
 
 	// ACCESSORS
@@ -31,19 +27,53 @@ public:
 		assert(leftChild != NULL && rightChild != NULL);
 		return false;
 	}
-	unsigned int getLeftIndex() const { return leftIndex; }
-	unsigned int getRightIndex() const { return rightIndex; }
+
+	// MODIFIERS
+	void setNormal(const glm::vec3& n) { normal = n; }
+
+	// SPECIAL FUNCTIONS
+	void Load() {
+		printf("hello, world!\n");
+		myMesh.Load(); }
+	const BoundingBox& getBoundingBox() const { return myMesh.getBoundingBox(); }
+	void initializeVBOs() {
+		myMesh.initializeVBOs();
+		if (leftChild != NULL) { leftChild->initializeVBOs(); }
+		if (rightChild != NULL) { rightChild->initializeVBOs(); }
+	}
+	void setupVBOs() {
+		myMesh.setupVBOs();
+		if (leftChild != NULL) { leftChild->setupVBOs(); }
+		if (rightChild != NULL) { rightChild->setupVBOs(); }
+	}
+	void drawVBOs() {
+		if (isLeaf()) {
+			myMesh.drawVBOs();
+			return;
+		}
+
+		leftChild->drawVBOs();
+		rightChild->drawVBOs();
+	}
+	void cleanupVBOs() {
+		myMesh.cleanupVBOs();
+		if (leftChild != NULL) { leftChild->cleanupVBOs(); }
+		if (rightChild != NULL) { rightChild->cleanupVBOs(); }
+	}
+	glm::vec3 LightPosition() const { return myMesh.LightPosition(); }
+
 
 	BSPTree* leftChild;
 	BSPTree* rightChild;
 
 private:
+	ArgParser *args;
 	unsigned int depth;
 
-	// these indices correspond to indices in our mesh vector
-	unsigned int leftIndex;
-	unsigned int rightIndex;
+	// the mesh that's split by our BSP node
+	Mesh myMesh;
 
+	// plane describing our BSP cut
 	glm::vec3 normal;
 	float offset;
 };

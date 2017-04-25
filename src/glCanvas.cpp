@@ -9,7 +9,8 @@
 #include <sys/time.h>
 #endif
 
-#include "mesh.h"
+#include "bsptree.h"
+// #include "mesh.h"
 #include "utils.h"
 
 // ========================================================
@@ -17,7 +18,8 @@
 
 ArgParser* GLCanvas::args = NULL;
 Camera* GLCanvas::camera = NULL;
-Mesh* GLCanvas::mesh = NULL;
+// Mesh* GLCanvas::mesh = NULL;
+BSPTree* GLCanvas::tree = NULL;
 BoundingBox GLCanvas::bbox;
 GLFWwindow* GLCanvas::window = NULL;
 
@@ -55,9 +57,13 @@ GLuint GLCanvas::wireframeID;
 void GLCanvas::initialize(ArgParser *_args) {
 
   args = _args;
-  mesh = new Mesh(args);
-  mesh->Load();
-  bbox.Set(mesh->getBoundingBox());
+  // mesh = new Mesh(args);
+  // mesh->Load();
+  // bbox.Set(mesh->getBoundingBox());
+  printf("hi\n");
+  tree = new BSPTree(args);
+  tree->Load();
+  bbox.Set(tree->getBoundingBox());
 
   glfwSetErrorCallback(error_callback);
 
@@ -108,8 +114,10 @@ void GLCanvas::initialize(ArgParser *_args) {
   programID = LoadShaders( args->path+"/"+args->shader_filename+".vs",
                            args->path+"/"+args->shader_filename+".fs");
 
+printf("here 1\n");
   GLCanvas::initializeVBOs();
   GLCanvas::setupVBOs();
+  printf("here 2\n");
 
   // ===========================
   // initial placement of camera
@@ -137,15 +145,20 @@ void GLCanvas::initializeVBOs(){
   GLCanvas::colormodeID = glGetUniformLocation(GLCanvas::programID, "colormode");
   GLCanvas::wireframeID = glGetUniformLocation(GLCanvas::programID, "wireframe");
 
-  mesh->initializeVBOs();
+  // mesh->initializeVBOs();
+  printf("test 1\n");
+  tree->initializeVBOs();
+  printf("test 2\n");
   HandleGLError("leaving initilizeVBOs()");
 }
 
 
 void GLCanvas::setupVBOs(){
   HandleGLError("enter GLCanvas::setupVBOs()");
-  assert (mesh != NULL);
-  mesh->setupVBOs();
+  // assert (mesh != NULL);
+  // mesh->setupVBOs();
+  assert (tree != NULL);
+  tree->setupVBOs();
   HandleGLError("leaving GLCanvas::setupVBOs()");
 }
 
@@ -155,7 +168,7 @@ void GLCanvas::drawVBOs(const glm::mat4 &ProjectionMatrix,const glm::mat4 &ViewM
 
   // prepare data to send to the shaders
   glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
-  glm::vec3 lightPos = mesh->LightPosition();
+  glm::vec3 lightPos = tree->LightPosition();
   glm::vec4 lightPos2 = glm::vec4(lightPos.x,lightPos.y,lightPos.z,1);
   lightPos2 = ModelMatrix * lightPos2;
   glUniform3f(GLCanvas::LightID, lightPos2.x, lightPos2.y, lightPos2.z);
@@ -164,14 +177,16 @@ void GLCanvas::drawVBOs(const glm::mat4 &ProjectionMatrix,const glm::mat4 &ViewM
   glUniformMatrix4fv(GLCanvas::ModelMatrixID, 1, GL_FALSE, &ModelMatrix[0][0]);
   glUniformMatrix4fv(GLCanvas::ViewMatrixID, 1, GL_FALSE, &ViewMatrix[0][0]);
 
-  mesh->drawVBOs();
+  // mesh->drawVBOs();
+  tree->drawVBOs();
   HandleGLError("leaving GlCanvas::drawVBOs()");
 }
 
 
 void GLCanvas::cleanupVBOs(){
   bbox.cleanupVBOs();
-  mesh->cleanupVBOs();
+  // mesh->cleanupVBOs();
+  tree->cleanupVBOs();
 }
 
 
@@ -259,30 +274,35 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
     switch (key) {
     case 'b': case 'B':
       args->bounding_box = !args->bounding_box;
-      mesh->setupVBOs();
+      // mesh->setupVBOs();
+      tree->setupVBOs();
       break;
     case 'g': case 'G':
       args->geometry = !args->geometry;
-      mesh->setupVBOs();
+      // mesh->setupVBOs();
+      tree->setupVBOs();
       break;
     case 'n': case 'N':
       args->gouraud_normals = !args->gouraud_normals;
-      mesh->setupVBOs();
+      // mesh->setupVBOs();
+      tree->setupVBOs();
       break;
     case 'w': case 'W':
       args->wireframe = !args->wireframe;
-      mesh->setupVBOs();
+      // mesh->setupVBOs();
+      tree->setupVBOs();
       break;
     case 'c': case 'C':
       //cut the mesh into partitions for printing
       break;
     case 'o': case 'O':
       //output scene into obj file
-      mesh->OutputFile();
+      // mesh->OutputFile();
       break;
     case 'l' : case 'L':
       //LoadCompileLinkShaders();
-      mesh->setupVBOs();
+      // mesh->setupVBOs();
+      tree->setupVBOs();
       break;
     case 'q':  case 'Q':
       // quit
@@ -387,6 +407,7 @@ GLuint LoadShaders(const std::string &vertex_file_path,const std::string &fragme
   glDeleteShader(VertexShaderID);
   glDeleteShader(FragmentShaderID);
 
+  printf("asdf\n");
   return ProgramID;
 }
 

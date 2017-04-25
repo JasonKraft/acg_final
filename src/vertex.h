@@ -11,7 +11,7 @@ public:
 
   // ========================
   // CONSTRUCTOR & DESTRUCTOR
-  Vertex(int i, int o, const glm::vec3 &pos) : position(pos), index(i), object_index(o) {}
+  Vertex(int i, const glm::vec3 &pos) : position(pos), index(i) {}
 
   // =========
   // ACCESSORS
@@ -21,7 +21,6 @@ public:
   double z() const { return position.z; }
   const glm::vec3& getPos() const { return position; }
   const glm::vec3& getGouraudNormal() const { return gouraud_normal; }
-  int getObjectIndex() const { return object_index; }
 
   // =========
   // MODIFIERS
@@ -42,10 +41,6 @@ private:
   // technically not part of the half-edge data structure,
   // but we use it for hashing
   int index;
-
-  // this is the index of the object that this vertex belongs to in the mesh
-  // (for when obj file has multiple objects in it)
-  int object_index;
 
   // NOTE: the vertices don't know anything about adjacency.  In some
   // versions of this data structure they have a pointer to one of
