@@ -35,12 +35,16 @@ public:
 	void Load() { myMesh.Load(); }
 	const BoundingBox& getBoundingBox() const { return myMesh.getBoundingBox(); }
 	void initializeVBOs() {
-		myMesh.initializeVBOs();
+		if (isLeaf()) {
+			myMesh.initializeVBOs();
+		}
 		if (leftChild != NULL) { leftChild->initializeVBOs(); }
 		if (rightChild != NULL) { rightChild->initializeVBOs(); }
 	}
 	void setupVBOs() {
-		myMesh.setupVBOs();
+		if (isLeaf()) {
+			myMesh.setupVBOs();
+		}
 		if (leftChild != NULL) { leftChild->setupVBOs(); }
 		if (rightChild != NULL) { rightChild->setupVBOs(); }
 	}

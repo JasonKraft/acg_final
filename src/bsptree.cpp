@@ -21,7 +21,7 @@ float BSPTree::CastRay(const glm::vec3& dir, const glm::vec3& origin, const glm:
 	return offset - glm::dot(origin, normal) / glm::dot(dir, normal);
 }
 
-void BSPTree::addTriangle(Vertex* a, Vertex* b, Vertex* c) {
+void BSPTree::addTriangle(glm::vec3 a, glm::vec3 b, glm::vec3 c) {
 	Vertex* newA = myMesh.addVertex(a);
 	Vertex* newB = myMesh.addVertex(b);
 	Vertex* newC = myMesh.addVertex(c);
@@ -38,12 +38,18 @@ void BSPTree::chop(const glm::vec3& normal, float offset) {
 
 	glm::vec3 pointOnPlane = normal * offset;
 
+	// 2D vector with pointers to the new Vertex in each child mesh
+	std::vector<std::vector<Vertex*> > childVertices;
+
+	// go through all the triangles and if they are on the right/left side of the cut pointOnPlane
+	// put them in the right/left child respectively
+	// if the triangle is intersecting the cut plane, place them in both children
 	for (triangleshashtype::iterator iter = myMesh.triangles.begin();
        iter != myMesh.triangles.end(); iter++) {
 		Triangle *t = iter->second;
 		Vertex *avert = (*t)[0];
-		Vertex *bvert = (*t)[0];
-		Vertex *cvert = (*t)[0];
+		Vertex *bvert = (*t)[1];
+		Vertex *cvert = (*t)[2];
 		glm::vec3 a = avert->getPos();
 		glm::vec3 b = bvert->getPos();
 		glm::vec3 c = cvert->getPos();
@@ -53,9 +59,6 @@ void BSPTree::chop(const glm::vec3& normal, float offset) {
 		float distC = glm::dot(normal, c-pointOnPlane);
 
 		if (distA >= 0 && distB >= 0 && distC >= 0) {
-			Edge* ab = rightChild->myMesh.getEdge(avert,bvert);
-			Edge* bc = rightChild->myMesh.getEdge(bvert,cvert);
-			Edge* ca = rightChild->myMesh.getEdge(cvert,avert);
 			rightChild->addTriangle(a,b,c);
 			continue;
 		}
@@ -132,4 +135,5 @@ void BSPTree::chop(const glm::vec3& normal, float offset) {
 			continue;
 		}
 	}
+
 }
