@@ -67,7 +67,7 @@ public:
   // =========
   // TRIANGLES
   int numTriangles() const { return triangles.size(); }
-  void addTriangle(Vertex *a, Vertex *b, Vertex *c);
+  Triangle* addTriangle(Vertex *a, Vertex *b, Vertex *c);
   void removeTriangle(Triangle *t);
 
   // ===============
@@ -90,6 +90,14 @@ public:
   // function to output scene into obj file
   void OutputFile();
 
+  // ==================================================
+  // PARENT VERTEX RELATIONSHIPS (used for subdivision)
+  // this creates a relationship between 3 vertices (2 parents, 1 child)
+  void setParentsChild(Vertex *p1, Vertex *p2, Vertex *child);
+  // this accessor will find a child vertex (if it exists) when given
+  // two parent vertices
+  Vertex* getChildVertex(Vertex *p1, Vertex *p2) const;
+
 private:
 
   // HELPER FUNCTIONS FOR PAINT
@@ -105,6 +113,7 @@ private:
   triangleshashtype triangles;
   BoundingBox bbox;
   std::vector<glm::vec4> colors;  //pre-defined colors for different objects in mesh
+  vphashtype vertex_parents;
 
   // VBOs
   GLuint mesh_tri_verts_VBO;
