@@ -55,7 +55,7 @@ public:
 		}
 
 		leftChild->drawVBOs();
-		rightChild->drawVBOs();
+		// rightChild->drawVBOs();
 	}
 	void cleanupVBOs() {
 		myMesh.cleanupVBOs();
@@ -70,7 +70,8 @@ public:
 
 private:
 	float CastRay(const glm::vec3& dir, const glm::vec3& origin, const glm::vec3& normal, float offset) const;
-	void addTriangle(glm::vec3 a, glm::vec3 b, glm::vec3 c);
+	void addTriangle(Vertex* a, Vertex* b, Vertex* c, int side, std::vector<std::vector<Vertex*> >& childVertices);
+	void pruneChildMesh();
 
 	ArgParser *args;
 	unsigned int depth;
