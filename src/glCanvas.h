@@ -75,6 +75,9 @@ public:
   static void mousemotionCB(GLFWwindow *window, double x, double y);
   static void keyboardCB(GLFWwindow *window, int key, int scancode, int action, int mods);
   static void error_callback(int error, const char* description);
+
+  // Run beam search algorithm
+  static BSPTree* beamSearch(BSPTree* tree);
 };
 
 // ====================================================================

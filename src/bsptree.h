@@ -64,6 +64,13 @@ public:
 	}
 	glm::vec3 LightPosition() const { return myMesh.LightPosition(); }
 	void chop(const glm::vec3& normal, float offset);
+	bool fitsInVolume(float width, float height, float length) {
+		if (isLeaf()) {
+			return myMesh.fitsInVolume(width, height, length);
+		}
+
+		return leftChild->fitsInVolume(width, height, length) && rightChild->fitsInVolume(width, height, length);
+	}
 
 	BSPTree* leftChild;
 	BSPTree* rightChild;

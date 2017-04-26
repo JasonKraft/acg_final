@@ -305,6 +305,9 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       tree->chop(glm::vec3(1.0f, 0.0f, 0.0f), 0.0);
       tree->initializeVBOs();
       tree->setupVBOs();
+      tree->leftChild->chop(glm::vec3(0.0f, 1.0f, 0.0f), 0.1511);
+      tree->initializeVBOs();
+      tree->setupVBOs();
       args->wireframe = tempWire;
       tree->setupVBOs();
       break;

@@ -18,7 +18,7 @@ float BSPTree::CastRay(const glm::vec3& dir, const glm::vec3& origin, const glm:
 	// origin . normal + t * direction . normal = d;
 	// t = d - origin.normal / direction.normal;
 
-	return offset - glm::dot(origin, normal) / glm::dot(dir, normal);
+	return (offset - glm::dot(origin, normal)) / glm::dot(dir, normal);
 }
 
 void BSPTree::addTriangle(glm::vec3 a, glm::vec3 b, glm::vec3 c) {

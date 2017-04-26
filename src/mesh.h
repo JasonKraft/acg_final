@@ -7,6 +7,7 @@
 #include "hash.h"
 #include "boundingbox.h"
 #include "vbo_structs.h"
+#include "argparser.h"
 
 class ArgParser;
 class Vertex;
@@ -24,19 +25,24 @@ public:
   // CONSTRUCTOR & DESTRUCTOR
   Mesh(ArgParser *_args) {
     args = _args;
-    glm::vec4 colorsArray[10] = {
-        glm::vec4(0.886f, 0.313f, 0.345f,1),
-        glm::vec4(0.760f, 0.419f, 0.592f,1),
-        glm::vec4(0.4f, 0.647f, 0.882f,1),
-        glm::vec4(0.415f, 0.823f, 0.745f,1),
-        glm::vec4(0.439f, 0.360f, 0.8f,1),
-        glm::vec4(0.898f, 0.513f, 0.321f,1),
-        glm::vec4(0.921f, 0.886f, 0.439f,1),
-        glm::vec4(0.537f, 0.858f, 0.341f,1),
-        glm::vec4(0.345f, 0.447f, 0.835f,1),
-        glm::vec4(0.603f, 0.835f, 0.345f,1)
-    };
-    colors.insert(colors.end(), &colorsArray[0], &colorsArray[10]);
+    // glm::vec4 colorsArray[10] = {
+    //     glm::vec4(0.886f, 0.313f, 0.345f,1),
+    //     glm::vec4(0.760f, 0.419f, 0.592f,1),
+    //     glm::vec4(0.4f, 0.647f, 0.882f,1),
+    //     glm::vec4(0.415f, 0.823f, 0.745f,1),
+    //     glm::vec4(0.439f, 0.360f, 0.8f,1),
+    //     glm::vec4(0.898f, 0.513f, 0.321f,1),
+    //     glm::vec4(0.921f, 0.886f, 0.439f,1),
+    //     glm::vec4(0.537f, 0.858f, 0.341f,1),
+    //     glm::vec4(0.345f, 0.447f, 0.835f,1),
+    //     glm::vec4(0.603f, 0.835f, 0.345f,1)
+    // };
+    // int start = (int)(args->rand() * 10);
+    // colors.insert(colors.end(), &colorsArray[start], &colorsArray[10]);
+    float r = (float)(args->rand());
+    float g = (float)(args->rand());
+    float b = (float)(args->rand());
+    colors.push_back(glm::vec4(r,g,b,1));
   }
   ~Mesh();
   void Load();
@@ -89,6 +95,9 @@ public:
 
   // function to output scene into obj file
   void OutputFile();
+
+  // Determines whether mesh can fit inside of specified volume dimensions
+  bool fitsInVolume(float width, float height, float length);
 
 private:
 
