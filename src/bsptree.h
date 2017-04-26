@@ -16,6 +16,9 @@ public:
 		leftChild = rightChild = NULL;
 	}
 
+	// copy constructor
+	BSPTree(const BSPTree &tree);
+
 	~BSPTree();
 
 	// ACCESSORS
@@ -27,6 +30,7 @@ public:
 		assert(leftChild != NULL && rightChild != NULL);
 		return false;
 	}
+	float getGrade() const { return grade; }
 
 	// MODIFIERS
 	void setNormal(const glm::vec3& n) { normal = n; }
@@ -89,6 +93,18 @@ private:
 	// plane describing our BSP cut
 	glm::vec3 normal;
 	float offset;
+
+	// objective function grade
+	// the lower the grade, the better
+	float grade;
+};
+
+// class to compare BSPTrees based on their objective function grade
+class BSPTreeGreaterThan {
+public:
+	bool operator() (BSPTree* lhs, BSPTree* rhs) const {
+		return lhs->getGrade() > rhs->getGrade();
+	}
 };
 
 #endif

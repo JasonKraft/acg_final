@@ -86,5 +86,6 @@ public:
 GLuint LoadShaders(const std::string &vertex_file_path,const std::string &fragment_file_path);
 std::string WhichGLError(GLenum &error);
 int HandleGLError(const std::string &message = "", bool ignore = false);
+bool allAtGoal(const std::vector<BSPTree*> &currentBSPs);
 
 #endif

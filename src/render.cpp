@@ -186,7 +186,7 @@ void Mesh::SetupMesh() {
       nb = (*t)[1]->getGouraudNormal();
       nc = (*t)[2]->getGouraudNormal();
     }
-    glm::vec4 center_color = colors[0 /*(*t)[0]->getObjectIndex()*/];
+    glm::vec4 center_color = meshColor;
 
     TriVBOHelper(a,b,c,
                  na,nb,nc,

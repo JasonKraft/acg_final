@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <queue>
 #include "glCanvas.h"
 #include "argparser.h"
 #include "camera.h"
@@ -477,3 +478,69 @@ int HandleGLError(const std::string &message, bool ignore) {
 
 // ========================================================
 // ========================================================
+
+bool allAtGoal(const std::vector<BSPTree*> &currentBSPs) {
+  for (unsigned int i = 0; i < currentBSPs.size(); ++i) {
+    if (currentBSPs[i] == NULL ||
+        !currentBSPs[i]->fitsInVolume(GLCanvas::args->printing_width,
+                                      GLCanvas::args->printing_height,
+                                      GLCanvas::args->printing_length)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+BSPTree* GLCanvas::beamSearch(BSPTree* tree) {
+  std::vector<BSPTree*> currentBSPs(args->beam_width, NULL);
+  currentBSPs[0] = tree;
+
+  // while not all trees in currentBSPs can fit into the working volume
+  while(!allAtGoal(currentBSPs)) {
+    // this priority queue will store all possible new cuts in order of grade
+    // (lowest grade is first)
+    std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> newBSPs;
+    for (unsigned int i = 0; i < currentBSPs.size(); ++i) {
+      // skip over any null tree pointers or ones that already reach our goal
+      if (currentBSPs[i] == NULL ||
+        currentBSPs[i]->fitsInVolume(args->printing_width,
+                                       args->printing_height,
+                                       args->printing_length)) {
+        continue;
+      }
+
+      // remove this BSP tree from currentBSPs
+      BSPTree* t = new BSPTree(*(currentBSPs[i]));
+      delete currentBSPs[i];
+      currentBSPs[i] = NULL;
+
+    }
+
+    // replace any null trees in currentBSPs with the best graded ones from newBSPs
+    for (unsigned int i = 0; i < currentBSPs.size(); ++i) {
+      if (currentBSPs[i] == NULL) {
+        currentBSPs[i] = newBSPs.top();
+        newBSPs.pop();
+      }
+    }
+
+    // discard our remaining BSPs in newBSPs
+    while(!newBSPs.empty()) {
+      BSPTree *temp = newBSPs.top();
+      newBSPs.pop();
+      delete temp;
+    }
+  }
+
+  // return the BSP tree with the lowest grade
+  // (lower is better)
+  int bestTreeIndex = 0;
+  for (unsigned int i = 1; i < currentBSPs.size(); ++i) {
+    if (currentBSPs[i]->getGrade() < currentBSPs[bestTreeIndex]->getGrade()) {
+      bestTreeIndex = i;
+    }
+  }
+
+  return currentBSPs[bestTreeIndex];
+}

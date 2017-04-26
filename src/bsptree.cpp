@@ -1,8 +1,27 @@
 #include "bsptree.h"
 #include "triangle.h"
 
+// COPY CONSTRUCTOR
+BSPTree::BSPTree(const BSPTree &tree) : myMesh(tree.myMesh) {
+	normal = tree.normal;
+	offset = tree.offset;
+	args = tree.args;
+	depth = tree.depth;
+	grade = tree.grade;
+
+	if (!tree.isLeaf()) {
+		leftChild = new BSPTree(*(tree.leftChild));
+		rightChild = new BSPTree(*(tree.rightChild));
+	} else {
+		leftChild = NULL;
+		rightChild = NULL;
+	}
+}
+
 // DESTRUCTOR
 BSPTree::~BSPTree() {
+	myMesh.clear();
+
 	if (!isLeaf()) {
 		delete leftChild;
 		delete rightChild;
@@ -313,6 +332,8 @@ void BSPTree::chop(const glm::vec3& normal, float offset) {
 	assert(isLeaf());
 	leftChild = new BSPTree(args);
 	rightChild = new BSPTree(args);
+	this->normal = normal;
+	this->offset = offset;
 
 	glm::vec3 pointOnPlane = normal * offset;
 
@@ -359,11 +380,10 @@ void BSPTree::chop(const glm::vec3& normal, float offset) {
 		Triangle *LT = leftChild->addTriangle(avert,bvert,cvert,1,childVertices);
 		trianglesToRemoveR.push_back(RT);
 		trianglesToRemoveL.push_back(LT);
-
 	}
 
 	// cut the triangles in each child mesh that cross the plane
 	rightChild->pruneChildMesh(normal, offset, trianglesToRemoveR);
-	leftChild->pruneChildMesh(-normal, offset, trianglesToRemoveL);
+	leftChild->pruneChildMesh(-normal, -offset, trianglesToRemoveL);
 
 }
