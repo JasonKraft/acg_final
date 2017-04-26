@@ -50,7 +50,7 @@ Vertex* Mesh::addVertex(const glm::vec3 &position) {
 }
 
 
-void Mesh::addTriangle(Vertex *a, Vertex *b, Vertex *c) {
+Triangle* Mesh::addTriangle(Vertex *a, Vertex *b, Vertex *c) {
   // create the triangle
   Triangle *t = new Triangle();
   // create the edges
@@ -82,6 +82,8 @@ void Mesh::addTriangle(Vertex *a, Vertex *b, Vertex *c) {
   // add the triangle to the master list
   assert (triangles.find(t->getID()) == triangles.end());
   triangles[t->getID()] = t;
+
+  return t;
 }
 
 
@@ -104,11 +106,26 @@ void Mesh::removeTriangle(Triangle *t) {
   delete t;
 }
 
-// Helper function for accessing data in the hash table
+
+// =======================================================================
+// Helper functions for accessing data in the hash table
+// =======================================================================
+
 Edge* Mesh::getMeshEdge(Vertex *a, Vertex *b) const {
   edgeshashtype::const_iterator iter = edges.find(std::make_pair(a,b));
   if (iter == edges.end()) return NULL;
   return iter->second;
+}
+
+Vertex* Mesh::getChildVertex(Vertex *p1, Vertex *p2) const {
+  vphashtype::const_iterator iter = vertex_parents.find(std::make_pair(p1,p2));
+  if (iter == vertex_parents.end()) return NULL;
+  return iter->second;
+}
+
+void Mesh::setParentsChild(Vertex *p1, Vertex *p2, Vertex *child) {
+  assert (vertex_parents.find(std::make_pair(p1,p2)) == vertex_parents.end());
+  vertex_parents[std::make_pair(p1,p2)] = child;
 }
 
 // =======================================================================

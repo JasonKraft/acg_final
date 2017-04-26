@@ -77,7 +77,8 @@ public:
 
 private:
 	float CastRay(const glm::vec3& dir, const glm::vec3& origin, const glm::vec3& normal, float offset) const;
-	void addTriangle(glm::vec3 a, glm::vec3 b, glm::vec3 c);
+	Triangle* addTriangle(Vertex* a, Vertex* b, Vertex* c, int side, std::vector<std::vector<Vertex*> >& childVertices);
+	void pruneChildMesh(const glm::vec3& normal, float offset, std::vector<Triangle*>& trianglesToRemove);
 
 	ArgParser *args;
 	unsigned int depth;
