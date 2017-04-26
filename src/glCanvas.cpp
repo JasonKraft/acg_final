@@ -285,17 +285,20 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       tree->setupVBOs();
       break;
     case 'n': case 'N':
+      printf("ADDING GOURAUD SHADING\n");
       args->gouraud_normals = !args->gouraud_normals;
       // mesh->setupVBOs();
       tree->setupVBOs();
       break;
     case 'w': case 'W':
+      printf("CREATING WIREFRAME\n");
       args->wireframe = !args->wireframe;
       // mesh->setupVBOs();
       tree->setupVBOs();
       break;
     case 'c': case 'C':
       //cut the mesh into partitions for printing
+      printf("CUTTING THE MESH INTO PARTITIONS FOR PRINTING\n");
       tempWire = args->wireframe;
       args->wireframe = 0;
       tree->setupVBOs();
@@ -307,6 +310,7 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       break;
     case 'o': case 'O':
       //output scene into obj file
+      // printf("WRITING SCENE TO FILE\n");
       // mesh->OutputFile();
       break;
     case 'l' : case 'L':
