@@ -96,16 +96,26 @@ public:
 	// ===============
 	// OBJECTIVE functions
 	float fPart() {
-		//calculate number of printing volumes needed to do the initial mesh
-		//sum up all the printing volumes of the leaf nodes/partitions
+		// calculate number of printing volumes needed to do the initial mesh
+		// sum up all the printing volumes of the leaf nodes/partitions
+		// this tries to minimize the number of partitions needed
 		int myPrintVolumes = myMesh.numPrintVolumes(args->printing_width, args->printing_height, args->printing_length);
 		int totalPrintVolumes = getTotalPrintVolumes();
 
 		return (1.0f / myPrintVolumes) * totalPrintVolumes;
 	}
 	float fUtil() {
-		// find the max of ( 1 - partBBoxVolume/(numPrintingVolume * printingVolume) )
-		return 0;
+		// finds the max of ( 1 - partBBoxVolume/(numPrintVolumes * printingVolume) ) of all partitions
+		// this ensures that a partition is not too small
+		if (isLeaf()) {
+			float width = args->printing_width;
+			float height = args->printing_height;
+			float length = args->printing_length;
+			float printingVolume = width * height * length;
+			return 1 - myMesh.getBBVolume() / (myMesh.numPrintVolumes(width, height, length)  * printingVolume);
+		}
+
+		return std::max( leftChild->fUtil(), rightChild->fUtil() );
 	}
 	float fConnector() { return 0; }
 
