@@ -9,6 +9,7 @@ BSPTree::BSPTree(const BSPTree &tree) : myMesh(tree.myMesh) {
 	depth = tree.depth;
 	grade = tree.grade;
 
+	// printf("COPY CONSTRUCTOR\n");
 	if (!tree.isLeaf()) {
 		leftChild = new BSPTree(*(tree.leftChild));
 		rightChild = new BSPTree(*(tree.rightChild));
@@ -18,14 +19,48 @@ BSPTree::BSPTree(const BSPTree &tree) : myMesh(tree.myMesh) {
 	}
 }
 
+// ASSIGNMENT OPERATOR
+BSPTree& BSPTree::operator= (const BSPTree& tree) {
+	normal = tree.normal;
+	offset = tree.offset;
+	args = tree.args;
+	depth = tree.depth;
+	grade = tree.grade;
+	myMesh = tree.myMesh;
+
+	// printf("ASSIGNMENT OP\n");
+	if (!tree.isLeaf()) {
+		leftChild = new BSPTree(*(tree.leftChild));
+		rightChild = new BSPTree(*(tree.rightChild));
+	} else {
+		leftChild = NULL;
+		rightChild = NULL;
+	}
+
+	return *this;
+}
+
 // DESTRUCTOR
 BSPTree::~BSPTree() {
-	myMesh.clear();
-
+	// printf("DESTRUCTOR\n");
+	if (leftChild == NULL) {
+		printf("left null\n");
+	}
+	if (rightChild == NULL) {
+		printf("right null\n");
+	}
 	if (!isLeaf()) {
+		printf("deleting children\n");
 		delete leftChild;
 		delete rightChild;
+
+		leftChild = NULL;
+		rightChild = NULL;
 	}
+
+	printf("deleting bsp tree\n");
+	// myMesh.clear();
+	printf("cleared mesh\n");
 }
 
 float BSPTree::CastRay(const glm::vec3& dir, const glm::vec3& origin, const glm::vec3& normal, float offset) const {

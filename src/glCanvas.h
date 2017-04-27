@@ -15,12 +15,14 @@
 #include <cassert>
 #include <string>
 #include <list>
+#include <queue>
 
 #include "boundingbox.h"
 
 class ArgParser;
 class Camera;
 class BSPTree;
+class BSPTreeGreaterThan;
 // class Mesh;
 
 // ====================================================================
@@ -79,7 +81,7 @@ public:
 
   // Run beam search algorithm
   static BSPTree* beamSearch(BSPTree* tree);
-  static std::list<BSPTree*> evalCuts(BSPTree* t, BSPTree* p);
+  static std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> evalCuts(BSPTree* t, BSPTree* p);
 };
 
 // ====================================================================

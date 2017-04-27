@@ -23,6 +23,13 @@ public:
 
   // ========================
   // CONSTRUCTOR & DESTRUCTOR
+  Mesh() {
+    args = NULL;
+    float r = (float)(args->rand());
+    float g = (float)(args->rand());
+    float b = (float)(args->rand());
+    meshColor = glm::vec4(r,g,b,1);
+  }
   Mesh(ArgParser *_args) {
     args = _args;
     float r = (float)(args->rand());
@@ -32,6 +39,10 @@ public:
   }
   Mesh(const Mesh &oldMesh);
   ~Mesh();
+
+  // ASSIGNMENT OPERATOR
+  Mesh& operator= (const Mesh& oldMesh);
+
   void clear();
   void Load();
   void ComputeGouraudNormals();

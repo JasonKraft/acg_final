@@ -42,6 +42,7 @@ Mesh::~Mesh() {
 }
 
 void Mesh::clear() {
+  // printf("asdf\n");
   // delete all the triangles
   std::vector<Triangle*> todo;
   for (triangleshashtype::iterator iter = triangles.begin();
@@ -59,6 +60,30 @@ void Mesh::clear() {
     delete vertices[i];
   }
   cleanupVBOs();
+  // printf("fdklj\n");
+}
+
+// ASSIGNMENT OPERATOR
+Mesh& Mesh::operator= (const Mesh& oldMesh) {
+  args = oldMesh.args;
+  meshColor = oldMesh.meshColor;
+
+  // copy all vertices
+  // this has the added benefit of copying our bounding box
+  for (unsigned int i = 0; i < oldMesh.vertices.size(); ++i) {
+    addVertex(oldMesh.vertices[i]->getPos());
+  }
+
+  // copy all triangles and edges
+  for (triangleshashtype::const_iterator iter = oldMesh.triangles.begin(); iter != oldMesh.triangles.end(); ++iter) {
+    Triangle* t = iter->second;
+    Vertex* a = vertices[(*t)[0]->getIndex()];
+    Vertex* b = vertices[(*t)[1]->getIndex()];
+    Vertex* c = vertices[(*t)[2]->getIndex()];
+    addTriangle(a,b,c);
+  }
+
+  return *this;
 }
 
 // =======================================================================

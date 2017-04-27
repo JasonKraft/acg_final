@@ -1,5 +1,4 @@
 #include <cstdlib>
-#include <queue>
 #include "glCanvas.h"
 #include "argparser.h"
 #include "camera.h"
@@ -303,10 +302,11 @@ void GLCanvas::keyboardCB(GLFWwindow* window, int key, int scancode, int action,
       tempWire = args->wireframe;
       args->wireframe = 0;
       tree->setupVBOs();
-      tree->chop(glm::vec3(1.0f, 0.0f, 0.0f), 0.0);
-      tree->initializeVBOs();
-      tree->setupVBOs();
-      tree->leftChild->chop(glm::vec3(0.0f, 1.0f, 0.0f), 0.1511);
+      // tree->chop(glm::vec3(1.0f, 0.0f, 0.0f), 0.0);
+      // tree->initializeVBOs();
+      // tree->setupVBOs();
+      // tree->leftChild->chop(glm::vec3(0.0f, 1.0f, 0.0f), 0.1511);
+      tree = beamSearch(tree);
       tree->initializeVBOs();
       tree->setupVBOs();
       args->wireframe = tempWire;
@@ -493,79 +493,127 @@ bool allAtGoal(const std::vector<BSPTree*> &currentBSPs) {
 }
 
 BSPTree* GLCanvas::beamSearch(BSPTree* tree) {
-  std::vector<BSPTree*> currentBSPs(args->beam_width, NULL);
-  currentBSPs[0] = tree;
-
-  // while not all trees in currentBSPs can fit into the working volume
-  while(!allAtGoal(currentBSPs)) {
-    // this priority queue will store all possible new cuts in order of grade
-    // (lowest grade is first)
-    std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> newBSPs;
-    for (unsigned int i = 0; i < currentBSPs.size(); ++i) {
-      // skip over any null tree pointers or ones that already reach our goal
-      if (currentBSPs[i] == NULL ||
-        currentBSPs[i]->fitsInVolume(args->printing_width,
-                                       args->printing_height,
-                                       args->printing_length)) {
-        continue;
-      }
-
-      // remove this BSP tree from currentBSPs
-      BSPTree* t = new BSPTree(*(currentBSPs[i]));
-      delete currentBSPs[i];
-      currentBSPs[i] = NULL;
-      BSPTree* p = NULL;
-      t->largestPart(args->printing_width, args->printing_height, args->printing_length, p);
-      std::list<BSPTree*> resultSet = evalCuts(t,p);
-      for (std::list<BSPTree*>::iterator iter = resultSet.begin(); iter != resultSet.end(); ++iter) {
-        newBSPs.push(*iter);
-      }
-    }
-
-    // replace any null trees in currentBSPs with the best graded ones from newBSPs
-    for (unsigned int i = 0; i < currentBSPs.size(); ++i) {
-      if (currentBSPs[i] == NULL) {
-        currentBSPs[i] = newBSPs.top();
-        newBSPs.pop();
-      }
-    }
-
-    // discard our remaining BSPs in newBSPs
-    while(!newBSPs.empty()) {
-      BSPTree *temp = newBSPs.top();
-      newBSPs.pop();
-      delete temp;
-    }
-  }
-
-  // return the BSP tree with the lowest grade
-  // (lower is better)
-  int bestTreeIndex = 0;
-  for (unsigned int i = 1; i < currentBSPs.size(); ++i) {
-    if (currentBSPs[i]->getGrade() < currentBSPs[bestTreeIndex]->getGrade()) {
-      bestTreeIndex = i;
-    }
-  }
-
-  return currentBSPs[bestTreeIndex];
+  return NULL;
 }
 
-std::list<BSPTree*> GLCanvas::evalCuts(BSPTree* t, BSPTree* p) {
-  std::vector<glm::vec3> uniNorms;
+// BSPTree* GLCanvas::beamSearch(BSPTree* tree) {
+//   printf("test 1\n");
+//   std::vector<BSPTree*> currentBSPs(args->beam_width, NULL);
+//   currentBSPs[0] = new BSPTree(*tree);
+//
+//   int counter = 0;
+//   // while not all trees in currentBSPs can fit into the working volume
+//   while(!allAtGoal(currentBSPs) && counter < 5) {
+//     counter++;
+//     printf("test 2\n");
+//     // this priority queue will store all possible new cuts in order of grade
+//     // (lowest grade is first)
+//     std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> newBSPs;
+//     for (unsigned int i = 0; i < currentBSPs.size(); ++i) {
+//       printf("test 2.25\n");
+//       // skip over any null tree pointers or ones that already reach our goal
+//       if (currentBSPs[i] == NULL ||
+//         currentBSPs[i]->fitsInVolume(args->printing_width,
+//                                        args->printing_height,
+//                                        args->printing_length)) {
+//         continue;
+//       }
+//       printf("test 2.5\n");
+//       // remove this BSP tree from currentBSPs
+//       BSPTree* t = new BSPTree(*(currentBSPs[i]));
+//       // BSPTree *t = currentBSPs[i];
+//       printf("t fPart %f\n", t->fPart());
+//       printf("test 3\n");
+//       delete currentBSPs[i];
+//       printf("test 3.25\n");
+//       currentBSPs[i] = NULL;
+//       BSPTree* p = NULL;
+//
+//       printf("test 4\n");
+//       t->largestPart(args->printing_width, args->printing_height, args->printing_length, p);
+//       assert(p != NULL);
+//       std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> resultSet = evalCuts(t,p);
+//       // for (std::list<BSPTree*>::iterator iter = resultSet.begin(); iter != resultSet.end(); ++iter) {
+//       //   newBSPs.push(*iter);
+//       // }
+//
+//       printf("test 5\n");
+//       while (!resultSet.empty()) {
+//         printf("GRADES FROM RESULT SET: %f\n", resultSet.top()->getGrade());
+//         newBSPs.push(resultSet.top());
+//         resultSet.pop();
+//       }
+//
+//       printf("test 6\n");
+//     }
+//
+//     printf("test 7\n");
+//     // replace any null trees in currentBSPs with the best graded ones from newBSPs
+//     for (unsigned int i = 0; i < currentBSPs.size(); ++i) {
+//       if (currentBSPs[i] == NULL) {
+//         currentBSPs[i] = newBSPs.top();
+//         newBSPs.pop();
+//       }
+//     }
+//
+//     printf("test 8\n");
+//
+//     // discard our remaining BSPs in newBSPs
+//     while(!newBSPs.empty()) {
+//       BSPTree *temp = newBSPs.top();
+//       newBSPs.pop();
+//       delete temp;
+//     }
+//   }
+//
+//   // return the BSP tree with the lowest grade
+//   // (lower is better)
+//   int bestTreeIndex = 0;
+//   for (unsigned int i = 1; i < currentBSPs.size(); ++i) {
+//     if (currentBSPs[i]->getGrade() < currentBSPs[bestTreeIndex]->getGrade()) {
+//       bestTreeIndex = i;
+//     }
+//   }
+//
+//   return currentBSPs[bestTreeIndex];
+// }
+
+std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> GLCanvas::evalCuts(BSPTree* t, BSPTree* p) {
+  printf("ENTERING EVAL CUTS\n");
+  glm::vec3 un[] = {
+    glm::vec3(1.0f, 0.0f, 0.0f),
+    glm::vec3(0.0f, 1.0f, 0.0f),
+    glm::vec3(0.0f, 0.0f, 1.0f)
+  };
+
+  std::vector<glm::vec3> uniNorms(un, un + sizeof(un) / sizeof(un[0]));
+
+  // int counter = 0;
+  // float dRho = M_PI / 32.0;
+  // for (float rho = 0.0; rho <= M_PI/2.0; rho += dRho) {
+  //   float dTheta = sin(rho) * 2 * M_PI;
+  //
+  // }
+
+  std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> newTSet;
 
   // #pragma omp parallel for
   for (unsigned int i = 0; i < uniNorms.size(); ++i) {
+    printf("normal loop %u\n", i);
     // Genate all cuts with given norm uniNorms[i] and offsets
     float curOffset, maxOffset;
     p->getMinMaxOffsetsAlongNorm(uniNorms[i], curOffset, maxOffset);
 
-    typedef std::pair<float, std::pair<BSPTree*, BSPTree*> > CutListElem;
+    printf("num slices = %f\n", (maxOffset - curOffset)/args->offset_increment);
+
+    typedef std::pair<std::pair<float, float>, std::pair<BSPTree*, BSPTree*> > CutListElem;
     typedef std::list< CutListElem > CutList;
 
     CutList potentialCuts;
     while(curOffset <= maxOffset) {
+      // printf("cutting at %f\n", curOffset);
       p->chop(uniNorms[i], curOffset);
-      potentialCuts.push_back(std::make_pair(curOffset, std::make_pair(p->leftChild, p->rightChild)));
+      potentialCuts.push_back(std::make_pair(std::make_pair(0.0, curOffset), std::make_pair(p->leftChild, p->rightChild)));
       p->leftChild = NULL;
       p->rightChild = NULL;
       curOffset += args->offset_increment;
@@ -574,9 +622,45 @@ std::list<BSPTree*> GLCanvas::evalCuts(BSPTree* t, BSPTree* p) {
     // Evaluate objective functions:
     // fPart
     for (CutList::iterator iter = potentialCuts.begin(); iter != potentialCuts.end(); ++iter) {
-      p->setOffset(iter->first);
+      p->setOffset(iter->first.second);
       p->leftChild = iter->second.first;
       p->rightChild = iter->second.second;
+
+      iter->first.first += args->a_part * t->fPart();
+    }
+
+    for (CutList::iterator iter = potentialCuts.begin(); iter != potentialCuts.end(); ++iter) {
+      p->setOffset(iter->first.second);
+      p->leftChild = iter->second.first;
+      p->rightChild = iter->second.second;
+      t->setGrade(iter->first.first);
+      newTSet.push(new BSPTree(*t));
+    }
+
+    p->leftChild = NULL;
+    p->rightChild = NULL;
+  }
+
+  // float square = 0;
+  // float c = 0;
+  float last = 0.0;
+  std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> resultSet;
+  while (!newTSet.empty()) {
+    BSPTree* curT = newTSet.top();
+    // printf("grades in order: %f\n", curT->getGrade());
+    // square += curT->getGrade()*curT->getGrade();
+    newTSet.pop();
+    // TODO only push to resultSet if SufficientlyDifferent(curT, resultSet)
+    // if (sqrt((square + curT->getGrade()*curT->getGrade()) / c) > 0.1) {
+    if (curT->getGrade() != last) {
+      // square += curT->getGrade()*curT->getGrade();
+      // c+=1.0;
+      last = curT->getGrade();
+      resultSet.push(curT);
+    } else {
+      delete curT;
     }
   }
+
+  return resultSet;
 }
