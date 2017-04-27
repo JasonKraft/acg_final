@@ -34,6 +34,8 @@ public:
 
 	// MODIFIERS
 	void setNormal(const glm::vec3& n) { normal = n; }
+	void setOffset(float o) { offset = o; }
+	void setGrade(float g) { grade = g; }
 
 	// SPECIAL FUNCTIONS
 	void Load() { myMesh.Load(); }

@@ -328,7 +328,7 @@ void BSPTree::pruneChildMesh(const glm::vec3& normal, float offset, std::vector<
 	}
 }
 
-// cuts the mesh along the plane 
+// cuts the mesh along the plane
 void BSPTree::chop(const glm::vec3& normal, float offset) {
 	assert(isLeaf());
 	leftChild = new BSPTree(args);
@@ -417,7 +417,7 @@ int BSPTree::largestPart(float width, float height, float length, BSPTree* &lp) 
 		minOffset = glm::dot(normal, myMesh.getVertex(0)->getPos());
 		maxOffset = glm::dot(normal, myMesh.getVertex(0)->getPos());
 
-		for (unsigned int i = 1; i < myMesh.numVertices(); ++i) {
+		for (int i = 1; i < myMesh.numVertices(); ++i) {
 			float off = glm::dot(normal, myMesh.getVertex(i)->getPos());
 			if (off < minOffset) {
 				minOffset = off;

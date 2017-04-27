@@ -559,7 +559,8 @@ std::list<BSPTree*> GLCanvas::evalCuts(BSPTree* t, BSPTree* p) {
     float curOffset, maxOffset;
     p->getMinMaxOffsetsAlongNorm(uniNorms[i], curOffset, maxOffset);
 
-    typedef std::list< std::pair<float, std::pair<BSPTree*, BSPTree*> > > CutList;
+    typedef std::pair<float, std::pair<BSPTree*, BSPTree*> > CutListElem;
+    typedef std::list< CutListElem > CutList;
 
     CutList potentialCuts;
     while(curOffset <= maxOffset) {
@@ -570,7 +571,12 @@ std::list<BSPTree*> GLCanvas::evalCuts(BSPTree* t, BSPTree* p) {
       curOffset += args->offset_increment;
     }
 
-    // Evaluate objective functions
-
+    // Evaluate objective functions:
+    // fPart
+    for (CutList::iterator iter = potentialCuts.begin(); iter != potentialCuts.end(); ++iter) {
+      p->setOffset(iter->first);
+      p->leftChild = iter->second.first;
+      p->rightChild = iter->second.second;
+    }
   }
 }
