@@ -324,9 +324,9 @@ bool Mesh::fitsInVolume(float width, float height, float length) {
   return bsmall <= small && bmedium <= medium && blarge <= large;
 }
 
-// OBJECTIVE FUNCTION: fPart
+// helper function to calculate the fPart objective function
 // estimates the number of print volumes required to make the current part
-bool Mesh::fPart(float width, float height, float length) {
+int Mesh::numPrintVolumes(float width, float height, float length) {
   // sort the dimensions of our working volume into small, medium, and large dimensions
   float dims[] = {width, height, length};
   int smallIndex = 0, largeIndex = 0;

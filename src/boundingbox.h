@@ -25,11 +25,11 @@ public:
 
   // ========================
   // CONSTRUCTOR & DESTRUCTOR
-  BoundingBox() { 
+  BoundingBox() {
     Set(glm::vec3(0,0,0),glm::vec3(0,0,0)); }
   BoundingBox(const glm::vec3 &pos) {
     Set(pos,pos); }
-  BoundingBox(const glm::vec3 &_minimum, const glm::vec3 &_maximum) { 
+  BoundingBox(const glm::vec3 &_minimum, const glm::vec3 &_maximum) {
     Set(_minimum,_maximum); }
 
   // =========
@@ -40,7 +40,7 @@ public:
   const glm::vec3& getMin() const { return minimum; }
   const glm::vec3& getMax() const { return maximum; }
   void getCenter(glm::vec3 &c) const {
-    c = maximum; 
+    c = maximum;
     c -= minimum;
     c *= 0.5f;
     c += minimum;
@@ -50,6 +50,10 @@ public:
     double y = maximum.y - minimum.y;
     double z = maximum.z - minimum.z;
     return mymax(x,mymax(y,z));
+  }
+  float getVolume() {
+    glm::vec3 bbDimensions = maximum - minimum;
+    return bbDimensions.x * bbDimensions.y * bbDimensions.z;
   }
 
   // =========
@@ -69,11 +73,11 @@ public:
                         mymin(minimum.z,v.z));
     maximum = glm::vec3(mymax(maximum.x,v.x),
                         mymax(maximum.y,v.y),
-                        mymax(maximum.z,v.z)); 
+                        mymax(maximum.z,v.z));
   }
   void Extend(const BoundingBox &bb) {
     Extend(bb.minimum);
-    Extend(bb.maximum); 
+    Extend(bb.maximum);
   }
 
   void initializeVBOs();

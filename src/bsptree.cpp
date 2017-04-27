@@ -328,6 +328,7 @@ void BSPTree::pruneChildMesh(const glm::vec3& normal, float offset, std::vector<
 	}
 }
 
+// cuts the mesh along the plane 
 void BSPTree::chop(const glm::vec3& normal, float offset) {
 	assert(isLeaf());
 	leftChild = new BSPTree(args);
@@ -388,10 +389,12 @@ void BSPTree::chop(const glm::vec3& normal, float offset) {
 
 }
 
+// finds the largest partition and returns the number of printing volumes
+// needed for it and the pointer to it via pass by reference
 int BSPTree::largestPart(float width, float height, float length, BSPTree* &lp) {
 	if (isLeaf()) {
 		lp = this;
-		return myMesh.fPart(width, height, length);
+		return myMesh.numPrintVolumes(width, height, length);
 	}
 
 	BSPTree* lpl;

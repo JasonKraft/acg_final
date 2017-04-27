@@ -87,8 +87,9 @@ public:
   // Determines whether mesh can fit inside of specified volume dimensions
   bool fitsInVolume(float width, float height, float length);
 
-  // OBJECTIVE FUNCTION: fPart
-  bool fPart(float width, float height, float length);
+  // HELPER FUNCTIONS FOR OBJECTIVE FUNCTIONS
+  int numPrintVolumes(float width, float height, float length);
+  float getBBVolume() { return bbox.getVolume(); }
 
   // ==================================================
   // PARENT VERTEX RELATIONSHIPS (used for subdivision)
