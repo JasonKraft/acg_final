@@ -553,4 +553,8 @@ BSPTree* GLCanvas::beamSearch(BSPTree* tree) {
 std::list<BSPTree*> GLCanvas::evalCuts(BSPTree* t, BSPTree* p) {
   std::vector<glm::vec3> uniNorms;
 
+  #pragma omp parallel for
+  for (unsigned int i = 0; i < uniNorms.size(); ++i) {
+
+  }
 }
