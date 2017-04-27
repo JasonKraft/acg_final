@@ -387,3 +387,23 @@ void BSPTree::chop(const glm::vec3& normal, float offset) {
 	leftChild->pruneChildMesh(-normal, -offset, trianglesToRemoveL);
 
 }
+
+int BSPTree::largestPart(float width, float height, float length, BSPTree* &lp) {
+	if (isLeaf()) {
+		lp = this;
+		return myMesh.fPart(width, height, length);
+	}
+
+	BSPTree* lpl;
+	BSPTree* lpr;
+	int numPartsLeft = leftChild->largestPart(width, height, length, lpl);
+	int numPartsRight = rightChild->largestPart(width, height, length, lpr);
+
+	if (numPartsLeft > numPartsRight) {
+		lp = lpl;
+		return numPartsLeft;
+	}
+
+	lp = lpr;
+	return numPartsRight;
+}

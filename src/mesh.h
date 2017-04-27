@@ -87,6 +87,9 @@ public:
   // Determines whether mesh can fit inside of specified volume dimensions
   bool fitsInVolume(float width, float height, float length);
 
+  // OBJECTIVE FUNCTION: fPart
+  bool fPart(float width, float height, float length);
+
   // ==================================================
   // PARENT VERTEX RELATIONSHIPS (used for subdivision)
   // this creates a relationship between 3 vertices (2 parents, 1 child)

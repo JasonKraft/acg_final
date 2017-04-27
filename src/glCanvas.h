@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <cassert>
 #include <string>
+#include <list>
 
 #include "boundingbox.h"
 
@@ -78,6 +79,7 @@ public:
 
   // Run beam search algorithm
   static BSPTree* beamSearch(BSPTree* tree);
+  static std::list<BSPTree*> evalCuts(BSPTree* t, BSPTree* p);
 };
 
 // ====================================================================

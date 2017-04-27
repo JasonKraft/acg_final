@@ -299,8 +299,7 @@ void Mesh::ComputeGouraudNormals() {
 bool Mesh::fitsInVolume(float width, float height, float length) {
   // sort the dimensions of our working volume into small, medium, and large dimensions
   float dims[] = {width, height, length};
-  int smallIndex = 0;
-  int largeIndex = 0;
+  int smallIndex = 0, largeIndex = 0;
   for (int i = 1; i < 3; ++i) {
     if (dims[i] < dims[smallIndex]) { smallIndex = i; }
     if (dims[i] > dims[largeIndex]) { largeIndex = i; }
@@ -323,4 +322,39 @@ bool Mesh::fitsInVolume(float width, float height, float length) {
   float bmedium = bdims[3-bsmallIndex-blargeIndex];
   float blarge = bdims[blargeIndex];
   return bsmall <= small && bmedium <= medium && blarge <= large;
+}
+
+// OBJECTIVE FUNCTION: fPart
+// estimates the number of print volumes required to make the current part
+bool Mesh::fPart(float width, float height, float length) {
+  // sort the dimensions of our working volume into small, medium, and large dimensions
+  float dims[] = {width, height, length};
+  int smallIndex = 0, largeIndex = 0;
+  for (int i = 1; i < 3; ++i) {
+    if (dims[i] < dims[smallIndex]) { smallIndex = i; }
+    if (dims[i] > dims[largeIndex]) { largeIndex = i; }
+  }
+  float small = dims[smallIndex];
+  float medium = dims[3-smallIndex-largeIndex];
+  float large = dims[largeIndex];
+
+  // for now just use axis-aligned bounding box
+  // and sort their dimensions just as before
+  glm::vec3 boundingBoxDimensions = bbox.getMax() - bbox.getMin();
+  float bdims[] = {boundingBoxDimensions.x, boundingBoxDimensions.y, boundingBoxDimensions.z};
+  int bsmallIndex = 0, blargeIndex = 0;
+  for (int i = 0; i < 3; ++i) {
+    if (bdims[i] < bdims[bsmallIndex]) { bsmallIndex = i; }
+    if (bdims[i] > bdims[blargeIndex]) { blargeIndex = i; }
+  }
+
+  float bsmall = bdims[bsmallIndex];
+  float bmedium = bdims[3-bsmallIndex-blargeIndex];
+  float blarge = bdims[blargeIndex];
+
+  int numSmall = (int)ceil(bsmall/small);
+  int numMedium = (int)ceil(bmedium/medium);
+  int numLarge = (int)ceil(blarge/large);
+
+  return std::max(std::max(numSmall, numMedium), numLarge);
 }

@@ -514,7 +514,12 @@ BSPTree* GLCanvas::beamSearch(BSPTree* tree) {
       BSPTree* t = new BSPTree(*(currentBSPs[i]));
       delete currentBSPs[i];
       currentBSPs[i] = NULL;
-
+      BSPTree* p = NULL;
+      t->largestPart(args->printing_width, args->printing_height, args->printing_length, p);
+      std::list<BSPTree*> resultSet = evalCuts(t,p);
+      for (std::list<BSPTree*>::iterator iter = resultSet.begin(); iter != resultSet.end(); ++iter) {
+        newBSPs.push(*iter);
+      }
     }
 
     // replace any null trees in currentBSPs with the best graded ones from newBSPs
@@ -543,4 +548,9 @@ BSPTree* GLCanvas::beamSearch(BSPTree* tree) {
   }
 
   return currentBSPs[bestTreeIndex];
+}
+
+std::list<BSPTree*> GLCanvas::evalCuts(BSPTree* t, BSPTree* p) {
+  std::vector<glm::vec3> uniNorms;
+
 }

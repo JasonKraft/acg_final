@@ -76,6 +76,8 @@ public:
 		return leftChild->fitsInVolume(width, height, length) && rightChild->fitsInVolume(width, height, length);
 	}
 
+	int largestPart(float width, float height, float length, BSPTree* &lp);
+
 	BSPTree* leftChild;
 	BSPTree* rightChild;
 
