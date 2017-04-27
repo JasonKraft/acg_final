@@ -75,6 +75,9 @@ public:
           argv[i] == std::string("-b")) {
         i++; assert(i < argc);
         beam_width = atoi(argv[i]);
+      } else if (argv[i] == std::string("-offset_increment")) {
+        i++; assert(i < argc);
+        sscanf(argv[i], "%f", &offset_increment);
       } else {
 	std::cout << "ERROR: unknown command line argument "
 		  << i << ": '" << argv[i] << "'" << std::endl;
@@ -107,6 +110,7 @@ public:
     printing_height = 15;
     printing_length = 10;
     beam_width = 4;
+    offset_increment = 0.5;
     geometry = true;
     wireframe = 0;
     bounding_box = false;
@@ -127,6 +131,7 @@ public:
   float printing_height;
   float printing_length;
   int beam_width;
+  float offset_increment;
   bool geometry;
   GLint wireframe;
   bool bounding_box;

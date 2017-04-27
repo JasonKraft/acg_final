@@ -553,8 +553,24 @@ BSPTree* GLCanvas::beamSearch(BSPTree* tree) {
 std::list<BSPTree*> GLCanvas::evalCuts(BSPTree* t, BSPTree* p) {
   std::vector<glm::vec3> uniNorms;
 
-  #pragma omp parallel for
+  // #pragma omp parallel for
   for (unsigned int i = 0; i < uniNorms.size(); ++i) {
+    // Genate all cuts with given norm uniNorms[i] and offsets
+    float curOffset, maxOffset;
+    p->getMinMaxOffsetsAlongNorm(uniNorms[i], curOffset, maxOffset);
+
+    typedef std::list< std::pair<float, std::pair<BSPTree*, BSPTree*> > > CutList;
+
+    CutList potentialCuts;
+    while(curOffset <= maxOffset) {
+      p->chop(uniNorms[i], curOffset);
+      potentialCuts.push_back(std::make_pair(curOffset, std::make_pair(p->leftChild, p->rightChild)));
+      p->leftChild = NULL;
+      p->rightChild = NULL;
+      curOffset += args->offset_increment;
+    }
+
+    // Evaluate objective functions
 
   }
 }

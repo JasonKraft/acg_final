@@ -77,6 +77,7 @@ public:
 	}
 
 	int largestPart(float width, float height, float length, BSPTree* &lp);
+	void getMinMaxOffsetsAlongNorm(const glm::vec3 &normal, float &minOffset, float &maxOffset);
 
 	BSPTree* leftChild;
 	BSPTree* rightChild;

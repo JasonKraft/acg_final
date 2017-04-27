@@ -407,3 +407,21 @@ int BSPTree::largestPart(float width, float height, float length, BSPTree* &lp) 
 	lp = lpr;
 	return numPartsRight;
 }
+
+	void BSPTree::getMinMaxOffsetsAlongNorm(const glm::vec3 &normal, float &minOffset, float &maxOffset) {
+		assert(myMesh.numVertices() > 0);
+
+		minOffset = glm::dot(normal, myMesh.getVertex(0)->getPos());
+		maxOffset = glm::dot(normal, myMesh.getVertex(0)->getPos());
+
+		for (unsigned int i = 1; i < myMesh.numVertices(); ++i) {
+			float off = glm::dot(normal, myMesh.getVertex(i)->getPos());
+			if (off < minOffset) {
+				minOffset = off;
+			}
+
+			if (off > maxOffset) {
+				maxOffset = off;
+			}
+		}
+	}
