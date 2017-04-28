@@ -502,7 +502,7 @@ BSPTree* GLCanvas::beamSearch(BSPTree* tree) {
 
   // continue searching until all trees in currentBSPs fit in the working volume of the printer
   int iterationCounter = 0;
-  while (!allAtGoal(currentBSPs) && iterationCounter < 3) {
+  while (!allAtGoal(currentBSPs) && iterationCounter < 10) {
     iterationCounter++;
     printf("\tITERATION %d\n", iterationCounter);
 
