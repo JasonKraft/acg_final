@@ -42,6 +42,7 @@ Mesh::~Mesh() {
 }
 
 void Mesh::clear() {
+  // printf("asdf\n");
   // delete all the triangles
   std::vector<Triangle*> todo;
   for (triangleshashtype::iterator iter = triangles.begin();
@@ -59,6 +60,30 @@ void Mesh::clear() {
     delete vertices[i];
   }
   cleanupVBOs();
+  // printf("fdklj\n");
+}
+
+// ASSIGNMENT OPERATOR
+Mesh& Mesh::operator= (const Mesh& oldMesh) {
+  args = oldMesh.args;
+  meshColor = oldMesh.meshColor;
+
+  // copy all vertices
+  // this has the added benefit of copying our bounding box
+  for (unsigned int i = 0; i < oldMesh.vertices.size(); ++i) {
+    addVertex(oldMesh.vertices[i]->getPos());
+  }
+
+  // copy all triangles and edges
+  for (triangleshashtype::const_iterator iter = oldMesh.triangles.begin(); iter != oldMesh.triangles.end(); ++iter) {
+    Triangle* t = iter->second;
+    Vertex* a = vertices[(*t)[0]->getIndex()];
+    Vertex* b = vertices[(*t)[1]->getIndex()];
+    Vertex* c = vertices[(*t)[2]->getIndex()];
+    addTriangle(a,b,c);
+  }
+
+  return *this;
 }
 
 // =======================================================================
@@ -78,6 +103,9 @@ Vertex* Mesh::addVertex(const glm::vec3 &position) {
 
 
 Triangle* Mesh::addTriangle(Vertex *a, Vertex *b, Vertex *c) {
+  assert(a != NULL);
+  assert(b != NULL);
+  assert(c != NULL);
   // create the triangle
   Triangle *t = new Triangle();
   // create the edges
@@ -310,7 +338,37 @@ bool Mesh::fitsInVolume(float width, float height, float length) {
 
   // for now just use axis-aligned bounding box
   // and sort their dimensions just as before
-  glm::vec3 boundingBoxDimensions = bbox.getMax() - bbox.getMin();
+  edgeshashtype::iterator iter = edges.begin();
+  glm::vec3 extremeMin = iter->second->getStartVertex()->getPos();
+  glm::vec3 extremeMax = iter->second->getStartVertex()->getPos();
+  iter++;
+  for (; iter != edges.end(); ++iter) {
+    glm::vec3 curVec = iter->second->getStartVertex()->getPos();
+    float x = curVec.x;
+    float y = curVec.y;
+    float z = curVec.z;
+    if (x < extremeMin.x) {
+      extremeMin.x = x;
+    }
+    if (y < extremeMin.y) {
+      extremeMin.y = y;
+    }
+    if (z < extremeMin.z) {
+      extremeMin.z = z;
+    }
+
+    if (x > extremeMax.x) {
+      extremeMax.x = x;
+    }
+    if (y > extremeMax.y) {
+      extremeMax.y = y;
+    }
+    if (z > extremeMax.z) {
+      extremeMax.z = z;
+    }
+  }
+  // glm::vec3 boundingBoxDimensions = bbox.getMax() - bbox.getMin();
+  glm::vec3 boundingBoxDimensions = extremeMax - extremeMin;
   float bdims[] = {boundingBoxDimensions.x, boundingBoxDimensions.y, boundingBoxDimensions.z};
   int bsmallIndex = 0, blargeIndex = 0;
   for (int i = 0; i < 3; ++i) {
@@ -327,6 +385,31 @@ bool Mesh::fitsInVolume(float width, float height, float length) {
 // helper function to calculate the fPart objective function
 // estimates the number of print volumes required to make the current part
 int Mesh::numPrintVolumes(float width, float height, float length) {
+  // // sort the dimensions of our working volume into small, medium, and large dimensions
+  // float dims[] = {width, height, length};
+  // int smallIndex = 0, largeIndex = 0;
+  // for (int i = 1; i < 3; ++i) {
+  //   if (dims[i] < dims[smallIndex]) { smallIndex = i; }
+  //   if (dims[i] > dims[largeIndex]) { largeIndex = i; }
+  // }
+  // float small = dims[smallIndex];
+  // float medium = dims[3-smallIndex-largeIndex];
+  // float large = dims[largeIndex];
+  //
+  // // for now just use axis-aligned bounding box
+  // // and sort their dimensions just as before
+  // glm::vec3 boundingBoxDimensions = bbox.getMax() - bbox.getMin();
+  // float bdims[] = {boundingBoxDimensions.x, boundingBoxDimensions.y, boundingBoxDimensions.z};
+  // int bsmallIndex = 0, blargeIndex = 0;
+  // for (int i = 0; i < 3; ++i) {
+  //   if (bdims[i] < bdims[bsmallIndex]) { bsmallIndex = i; }
+  //   if (bdims[i] > bdims[blargeIndex]) { blargeIndex = i; }
+  // }
+  //
+  // float bsmall = bdims[bsmallIndex];
+  // float bmedium = bdims[3-bsmallIndex-blargeIndex];
+  // float blarge = bdims[blargeIndex];
+
   // sort the dimensions of our working volume into small, medium, and large dimensions
   float dims[] = {width, height, length};
   int smallIndex = 0, largeIndex = 0;
@@ -340,7 +423,37 @@ int Mesh::numPrintVolumes(float width, float height, float length) {
 
   // for now just use axis-aligned bounding box
   // and sort their dimensions just as before
-  glm::vec3 boundingBoxDimensions = bbox.getMax() - bbox.getMin();
+  edgeshashtype::iterator iter = edges.begin();
+  glm::vec3 extremeMin = iter->second->getStartVertex()->getPos();
+  glm::vec3 extremeMax = iter->second->getStartVertex()->getPos();
+  iter++;
+  for (; iter != edges.end(); ++iter) {
+    glm::vec3 curVec = iter->second->getStartVertex()->getPos();
+    float x = curVec.x;
+    float y = curVec.y;
+    float z = curVec.z;
+    if (x < extremeMin.x) {
+      extremeMin.x = x;
+    }
+    if (y < extremeMin.y) {
+      extremeMin.y = y;
+    }
+    if (z < extremeMin.z) {
+      extremeMin.z = z;
+    }
+
+    if (x > extremeMax.x) {
+      extremeMax.x = x;
+    }
+    if (y > extremeMax.y) {
+      extremeMax.y = y;
+    }
+    if (z > extremeMax.z) {
+      extremeMax.z = z;
+    }
+  }
+  // glm::vec3 boundingBoxDimensions = bbox.getMax() - bbox.getMin();
+  glm::vec3 boundingBoxDimensions = extremeMax - extremeMin;
   float bdims[] = {boundingBoxDimensions.x, boundingBoxDimensions.y, boundingBoxDimensions.z};
   int bsmallIndex = 0, blargeIndex = 0;
   for (int i = 0; i < 3; ++i) {

@@ -106,15 +106,18 @@ public:
     shader_filename = "hw4_shader";
     width = 500;
     height = 500;
-    printing_width = 10;
-    printing_height = 15;
-    printing_length = 10;
+    printing_width = 0.1;
+    printing_height = 0.1;
+    printing_length = 0.1;
     beam_width = 4;
-    offset_increment = 0.5;
+    offset_increment = 0.01;
     geometry = true;
     wireframe = 0;
     bounding_box = false;
     gouraud_normals = false;
+    a_part = 1.0;
+    a_util = 0.05;
+    a_connector = 1.0;
   }
 
   // ==============
@@ -136,6 +139,11 @@ public:
   GLint wireframe;
   bool bounding_box;
   bool gouraud_normals;
+
+  // objective function weight coefficients
+  float a_part;
+  float a_util;
+  float a_connector;
 };
 
 #endif

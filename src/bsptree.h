@@ -10,16 +10,26 @@
 
 class BSPTree {
 public:
+	BSPTree() {
+		args = NULL;
+		depth = 0;
+		leftChild = NULL;
+		rightChild = NULL;
+	}
 	BSPTree(ArgParser *_args, unsigned int _depth = 0) : myMesh(_args) {
 		args = _args;
 		depth = _depth;
-		leftChild = rightChild = NULL;
+		leftChild = NULL;
+		rightChild = NULL;
 	}
 
 	// copy constructor
 	BSPTree(const BSPTree &tree);
 
 	~BSPTree();
+
+	// assignment operator
+	BSPTree& operator= (const BSPTree& tree);
 
 	// ACCESSORS
 	const glm::vec3& getNormal() const { return normal; }
@@ -31,14 +41,18 @@ public:
 		return false;
 	}
 	float getGrade() const { return grade; }
+	int numVertices() const { return myMesh.numVertices(); }
 
 	// MODIFIERS
 	void setNormal(const glm::vec3& n) { normal = n; }
+	void setOffset(float o) { offset = o; }
+	void setGrade(float g) { grade = g; }
 
 	// SPECIAL FUNCTIONS
 	void Load() { myMesh.Load(); }
 	const BoundingBox& getBoundingBox() const { return myMesh.getBoundingBox(); }
 	void initializeVBOs() {
+		printf("INIALIZE VBOS\n");
 		if (isLeaf()) {
 			myMesh.initializeVBOs();
 		}
@@ -46,6 +60,7 @@ public:
 		if (rightChild != NULL) { rightChild->initializeVBOs(); }
 	}
 	void setupVBOs() {
+		printf("SETUP VBOS\n");
 		if (isLeaf()) {
 			myMesh.setupVBOs();
 		}
@@ -53,6 +68,7 @@ public:
 		if (rightChild != NULL) { rightChild->setupVBOs(); }
 	}
 	void drawVBOs() {
+		// printf("DRAW VBOS\n");
 		if (isLeaf()) {
 			myMesh.drawVBOs();
 			return;
@@ -75,6 +91,7 @@ public:
 	// ===============
 	// VOLUME FUNCTIONS (dealing with printing volume)
 	bool fitsInVolume(float width, float height, float length) {
+		// printf("FITS IN VOLUME\n");
 		// checks if this mesh can fit in the printing volume
 		if (isLeaf()) {
 			return myMesh.fitsInVolume(width, height, length);
@@ -85,6 +102,7 @@ public:
 	int largestPart(float width, float height, float length, BSPTree* &lp);
 	void getMinMaxOffsetsAlongNorm(const glm::vec3 &normal, float &minOffset, float &maxOffset);
 	int getTotalPrintVolumes() {
+		// printf("GET TOTAL PRINT VOLUMES");
 		// gets the total number of print volumes that can fit in all the partitions seperately
 		if (isLeaf()) {
 			return myMesh.numPrintVolumes(args->printing_width, args->printing_height, args->printing_length);
