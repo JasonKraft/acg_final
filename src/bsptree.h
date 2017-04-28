@@ -135,7 +135,9 @@ public:
 			float height = args->printing_height;
 			float length = args->printing_length;
 			float printingVolume = width * height * length;
-			return 1 - myMesh.getBBVolume() / (myMesh.numPrintVolumes(width, height, length)  * printingVolume);
+			glm::vec3 bbd = myMesh.getBoundingBoxDims();
+			float bbv = bbd.x * bbd.y * bbd.z;
+			return 1 - bbv / (myMesh.numPrintVolumes(width, height, length)  * printingVolume);
 		}
 
 		return std::max( leftChild->fUtil(), rightChild->fUtil() );

@@ -502,7 +502,7 @@ BSPTree* GLCanvas::beamSearch(BSPTree* tree) {
 
   // continue searching until all trees in currentBSPs fit in the working volume of the printer
   int iterationCounter = 0;
-  while (!allAtGoal(currentBSPs) ) {
+  while (!allAtGoal(currentBSPs) && iterationCounter < 3) {
     iterationCounter++;
     printf("\tITERATION %d\n", iterationCounter);
 
@@ -714,9 +714,31 @@ std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> GLCanva
       p->rightChild = NULL;
     }
 
+    std::list<float> prevGrades;
     while(!potentialCuts.empty()) {
-      resultSet.push(potentialCuts.top());
-      potentialCuts.pop();
+      if (prevGrades.size() == 0) {
+        resultSet.push(potentialCuts.top());
+        prevGrades.push_back(potentialCuts.top()->getGrade());
+        potentialCuts.pop();
+      } else {
+        float rmse = 0;
+        for(std::list<float>::iterator iter = prevGrades.begin(); iter != prevGrades.end(); ++iter) {
+          rmse += (potentialCuts.top()->getGrade() - (*iter)) * (potentialCuts.top()->getGrade() - (*iter));
+        }
+        // printf("RMSE: %f\n", sqrt(rmse / prevGrades.size()));
+        if (sqrt(rmse / prevGrades.size()) > 0.1 * sqrt(args->printing_width * args->printing_width + args->printing_height * args->printing_height + args->printing_length * args->printing_length)) {
+          resultSet.push(potentialCuts.top());
+          prevGrades.push_back(potentialCuts.top()->getGrade());
+          potentialCuts.pop();
+        } else {
+          BSPTree* temp = potentialCuts.top();
+          potentialCuts.pop();
+          delete temp;
+        }
+      }
+      // resultSet.push(potentialCuts.top());
+      // //   prevGrades.push_back(potentialCuts.top()->getGrade());
+      //   potentialCuts.pop();
     }
   }
 
