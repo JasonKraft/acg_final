@@ -101,6 +101,7 @@ public:
   // HELPER FUNCTIONS FOR OBJECTIVE FUNCTIONS
   int numPrintVolumes(float width, float height, float length);
   float getBBVolume() { return bbox.getVolume(); }
+  glm::vec3 getBoundingBoxDims();
 
   // ==================================================
   // PARENT VERTEX RELATIONSHIPS (used for subdivision)

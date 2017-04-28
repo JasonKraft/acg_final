@@ -333,7 +333,13 @@ bool Mesh::fitsInVolume(float width, float height, float length) {
     if (dims[i] > dims[largeIndex]) { largeIndex = i; }
   }
   float small = dims[smallIndex];
-  float medium = dims[3-smallIndex-largeIndex];
+  float medium;
+  if (smallIndex == largeIndex) {
+    medium = dims[0];
+  } else {
+    medium = dims[3-smallIndex-largeIndex];
+  }
+  // float medium = dims[3-smallIndex-largeIndex];
   float large = dims[largeIndex];
 
   // for now just use axis-aligned bounding box
@@ -377,7 +383,12 @@ bool Mesh::fitsInVolume(float width, float height, float length) {
   }
 
   float bsmall = bdims[bsmallIndex];
-  float bmedium = bdims[3-bsmallIndex-blargeIndex];
+  float bmedium;
+  if (bsmallIndex == blargeIndex) {
+    bmedium = bdims[0];
+  } else {
+    bmedium = bdims[3-bsmallIndex-blargeIndex];
+  }
   float blarge = bdims[blargeIndex];
   return bsmall <= small && bmedium <= medium && blarge <= large;
 }
@@ -418,7 +429,12 @@ int Mesh::numPrintVolumes(float width, float height, float length) {
     if (dims[i] > dims[largeIndex]) { largeIndex = i; }
   }
   float small = dims[smallIndex];
-  float medium = dims[3-smallIndex-largeIndex];
+  float medium;
+  if (smallIndex == largeIndex) {
+    medium = dims[0];
+  } else {
+    medium = dims[3-smallIndex-largeIndex];
+  }
   float large = dims[largeIndex];
 
   // for now just use axis-aligned bounding box
@@ -462,7 +478,12 @@ int Mesh::numPrintVolumes(float width, float height, float length) {
   }
 
   float bsmall = bdims[bsmallIndex];
-  float bmedium = bdims[3-bsmallIndex-blargeIndex];
+  float bmedium;
+  if (bsmallIndex == blargeIndex) {
+    bmedium = bdims[0];
+  } else {
+    bmedium = bdims[3-bsmallIndex-blargeIndex];
+  }
   float blarge = bdims[blargeIndex];
 
   int numSmall = (int)ceil(bsmall/small);
@@ -470,4 +491,39 @@ int Mesh::numPrintVolumes(float width, float height, float length) {
   int numLarge = (int)ceil(blarge/large);
 
   return std::max(std::max(numSmall, numMedium), numLarge);
+}
+
+glm::vec3 Mesh::getBoundingBoxDims() {
+  edgeshashtype::iterator iter = edges.begin();
+  glm::vec3 extremeMin = iter->second->getStartVertex()->getPos();
+  glm::vec3 extremeMax = iter->second->getStartVertex()->getPos();
+  iter++;
+  for (; iter != edges.end(); ++iter) {
+    glm::vec3 curVec = iter->second->getStartVertex()->getPos();
+    float x = curVec.x;
+    float y = curVec.y;
+    float z = curVec.z;
+    if (x < extremeMin.x) {
+      extremeMin.x = x;
+    }
+    if (y < extremeMin.y) {
+      extremeMin.y = y;
+    }
+    if (z < extremeMin.z) {
+      extremeMin.z = z;
+    }
+
+    if (x > extremeMax.x) {
+      extremeMax.x = x;
+    }
+    if (y > extremeMax.y) {
+      extremeMax.y = y;
+    }
+    if (z > extremeMax.z) {
+      extremeMax.z = z;
+    }
+  }
+  // glm::vec3 boundingBoxDimensions = bbox.getMax() - bbox.getMin();
+  glm::vec3 boundingBoxDimensions = extremeMax - extremeMin;
+  return boundingBoxDimensions;
 }
