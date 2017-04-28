@@ -82,6 +82,8 @@ public:
   // Run beam search algorithm
   static BSPTree* beamSearch(BSPTree* tree);
   static std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> evalCuts(BSPTree* t, BSPTree* p);
+
+  static glm::vec3 uniNorms[129];
 };
 
 // ====================================================================

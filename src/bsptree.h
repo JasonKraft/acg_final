@@ -41,6 +41,7 @@ public:
 		return false;
 	}
 	float getGrade() const { return grade; }
+	int numVertices() const { return myMesh.numVertices(); }
 
 	// MODIFIERS
 	void setNormal(const glm::vec3& n) { normal = n; }
@@ -163,7 +164,7 @@ private:
 class BSPTreeGreaterThan {
 public:
 	bool operator() (BSPTree* lhs, BSPTree* rhs) const {
-		return lhs->getGrade() < rhs->getGrade();
+		return lhs->getGrade() > rhs->getGrade();
 	}
 };
 

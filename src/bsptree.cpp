@@ -1,5 +1,6 @@
 #include "bsptree.h"
 #include "triangle.h"
+#include "utils.h"
 
 // COPY CONSTRUCTOR
 BSPTree::BSPTree(const BSPTree &tree) : myMesh(tree.myMesh) {
@@ -43,14 +44,14 @@ BSPTree& BSPTree::operator= (const BSPTree& tree) {
 // DESTRUCTOR
 BSPTree::~BSPTree() {
 	// printf("DESTRUCTOR\n");
-	if (leftChild == NULL) {
-		printf("left null\n");
-	}
-	if (rightChild == NULL) {
-		printf("right null\n");
-	}
+	// if (leftChild == NULL) {
+	// 	printf("left null\n");
+	// }
+	// if (rightChild == NULL) {
+	// 	printf("right null\n");
+	// }
 	if (!isLeaf()) {
-		printf("deleting children\n");
+		// printf("deleting children\n");
 		delete leftChild;
 		delete rightChild;
 
@@ -58,9 +59,9 @@ BSPTree::~BSPTree() {
 		rightChild = NULL;
 	}
 
-	printf("deleting bsp tree\n");
+	// printf("deleting bsp tree\n");
 	// myMesh.clear();
-	printf("cleared mesh\n");
+	// printf("cleared mesh\n");
 }
 
 float BSPTree::CastRay(const glm::vec3& dir, const glm::vec3& origin, const glm::vec3& normal, float offset) const {
@@ -365,7 +366,9 @@ void BSPTree::pruneChildMesh(const glm::vec3& normal, float offset, std::vector<
 
 // cuts the mesh along the plane
 void BSPTree::chop(const glm::vec3& normal, float offset) {
+	// printf("begin chop %f %f %f, %f\n", normal.x, normal.y, normal.z, offset);
 	assert(isLeaf());
+	assert(numVertices() > 0);
 	leftChild = new BSPTree(args);
 	rightChild = new BSPTree(args);
 	this->normal = normal;
@@ -375,7 +378,7 @@ void BSPTree::chop(const glm::vec3& normal, float offset) {
 
 	// 2D vector with pointers to the new Vertex in each child mesh
 	// index of the inner vector is corresponds to the index of the vertex from the parent BSPTree mesh
-	std::vector<std::vector<Vertex*> > childVertices(myMesh.numVertices(), std::vector<Vertex*>(2));
+	std::vector<std::vector<Vertex*> > childVertices(myMesh.numVertices(), std::vector<Vertex*>(2,NULL));
 
 	// vector of triangles that intersect the plane, one for each child
 	// holds the pointers to the triangles for that respective mesh
@@ -401,27 +404,36 @@ void BSPTree::chop(const glm::vec3& normal, float offset) {
 
 		// triangle to the right of the plane, add to the right child
 		if (distA >= 0 && distB >= 0 && distC >= 0) {
+			// printf("adding right\n");
 			rightChild->addTriangle(avert,bvert,cvert,0,childVertices);
 			continue;
 		}
 
 		// triangle to the left of the plane, add to the left child
 		if (distA <= 0 && distB <= 0 && distC <= 0) {
+			// printf("adding left\n");
 			leftChild->addTriangle(avert,bvert,cvert,1,childVertices);
 			continue;
 		}
 
+		// printf("adding to both\n");
 		// triangle intersecting the plane, add it to both children and to vector
 		Triangle *RT = rightChild->addTriangle(avert,bvert,cvert,0,childVertices);
 		Triangle *LT = leftChild->addTriangle(avert,bvert,cvert,1,childVertices);
+
 		trianglesToRemoveR.push_back(RT);
 		trianglesToRemoveL.push_back(LT);
 	}
+
+	assert(rightChild->numVertices() > 0);
+	assert(leftChild->numVertices() > 0);
 
 	// cut the triangles in each child mesh that cross the plane
 	rightChild->pruneChildMesh(normal, offset, trianglesToRemoveR);
 	leftChild->pruneChildMesh(-normal, -offset, trianglesToRemoveL);
 
+	assert(rightChild->numVertices() > 0);
+	assert(leftChild->numVertices() > 0);
 }
 
 // finds the largest partition and returns the number of printing volumes
@@ -449,11 +461,16 @@ int BSPTree::largestPart(float width, float height, float length, BSPTree* &lp) 
 	void BSPTree::getMinMaxOffsetsAlongNorm(const glm::vec3 &normal, float &minOffset, float &maxOffset) {
 		assert(myMesh.numVertices() > 0);
 
-		minOffset = glm::dot(normal, myMesh.getVertex(0)->getPos());
-		maxOffset = glm::dot(normal, myMesh.getVertex(0)->getPos());
+		// minOffset = glm::dot(normal, myMesh.getVertex(0)->getPos());
+		// maxOffset = glm::dot(normal, myMesh.getVertex(0)->getPos());
+		edgeshashtype::iterator iter = myMesh.edges.begin();
 
-		for (int i = 1; i < myMesh.numVertices(); ++i) {
-			float off = glm::dot(normal, myMesh.getVertex(i)->getPos());
+		minOffset = glm::dot(normal, (*iter).second->getStartVertex()->getPos());
+		maxOffset = glm::dot(normal, (*iter).second->getStartVertex()->getPos());
+		iter++;
+
+		for (; iter != myMesh.edges.end(); ++iter) {
+			float off = glm::dot(normal, (*iter).second->getStartVertex()->getPos());
 			if (off < minOffset) {
 				minOffset = off;
 			}

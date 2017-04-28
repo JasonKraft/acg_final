@@ -493,7 +493,88 @@ bool allAtGoal(const std::vector<BSPTree*> &currentBSPs) {
 }
 
 BSPTree* GLCanvas::beamSearch(BSPTree* tree) {
-  return NULL;
+  printf("STARTING BEAM SEARCH...\n");
+  // store our search beam in a vector
+  std::vector<BSPTree*> currentBSPs(args->beam_width, NULL);
+
+  // put the input tree into the first spot of currentBSPs
+  currentBSPs[0] = tree;
+
+  // continue searching until all trees in currentBSPs fit in the working volume of the printer
+  int iterationCounter = 0;
+  while (!allAtGoal(currentBSPs) && iterationCounter < 10) {
+    iterationCounter++;
+    printf("\tITERATION %d\n", iterationCounter);
+
+    // priority queue to store all possible new cuts in order of objective function grade
+    std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> newBSPs;
+
+    // iterate through all trees in currentBSPs
+    for (unsigned int i = 0; i < currentBSPs.size(); ++i) {
+      if (currentBSPs[i] == NULL) {
+        printf("\t\tcurrentBSPs[%u] is NULL... skipping.\n", i);
+        continue;
+      }
+      if (currentBSPs[i]->fitsInVolume(args->printing_width,args->printing_height,args->printing_length)) {
+        printf("\t\tcurrentBSPs[%u] fits in the working volume... skipping.\n", i);
+        continue;
+      }
+
+      // remove the tree from currentBSPs
+      // NOTE we may have to copy and delete
+      printf("\t\tCutting currentBSPs[%u].\n", i);
+      BSPTree* t = currentBSPs[i];
+      currentBSPs[i] = NULL;
+
+      // find the largest leaf node of t
+      BSPTree* p = NULL;
+      t->largestPart(args->printing_width, args->printing_height, args->printing_length, p);
+      assert(p != NULL);
+      assert(p->isLeaf());
+
+      // find all candidate cuts for this partition and add it to newBSPs
+      std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> resultSet = evalCuts(t,p);
+      while (!resultSet.empty()) {
+        newBSPs.push(resultSet.top());
+        resultSet.pop();
+      }
+
+      delete t;
+    }
+
+    // find all empty spots in currentBSPs and fill them with the top
+    // trees from newBSPs
+    for (unsigned int i = 0; i < currentBSPs.size(); ++i) {
+      if (currentBSPs[i] == NULL) {
+        currentBSPs[i] = newBSPs.top();
+        newBSPs.pop();
+      }
+    }
+
+    // discard all other trees from newBSPs
+    while(!newBSPs.empty()) {
+      BSPTree* temp = newBSPs.top();
+      newBSPs.pop();
+      delete temp;
+    }
+  }
+
+  unsigned int bestTreeIndex = 0;
+  for (unsigned int i = 1; i < currentBSPs.size(); ++i) {
+    if (currentBSPs[bestTreeIndex]->getGrade() > currentBSPs[i]->getGrade()) {
+      bestTreeIndex = i;
+    }
+
+    if (currentBSPs[i]->fitsInVolume(args->printing_width,args->printing_height,args->printing_length)) {
+      printf("%d fits!\n", i);
+    } else {
+      printf("%d doesn't fit :(\n", i);
+    }
+  }
+
+  printf("FINISHED BEAM SEARCH!\n");
+
+  return currentBSPs[bestTreeIndex];
 }
 
 // BSPTree* GLCanvas::beamSearch(BSPTree* tree) {
@@ -578,89 +659,283 @@ BSPTree* GLCanvas::beamSearch(BSPTree* tree) {
 //   return currentBSPs[bestTreeIndex];
 // }
 
-std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> GLCanvas::evalCuts(BSPTree* t, BSPTree* p) {
-  printf("ENTERING EVAL CUTS\n");
-  glm::vec3 un[] = {
-    glm::vec3(1.0f, 0.0f, 0.0f),
-    glm::vec3(0.0f, 1.0f, 0.0f),
-    glm::vec3(0.0f, 0.0f, 1.0f)
-  };
+std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> GLCanvas::evalCuts(BSPTree* to, BSPTree* po) {
+  printf("\t\tSTARTED EVALUATING CUTS\n");
 
-  std::vector<glm::vec3> uniNorms(un, un + sizeof(un) / sizeof(un[0]));
+  // stores all the cuts we make
+  std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> resultSet;
 
-  // int counter = 0;
-  // float dRho = M_PI / 32.0;
-  // for (float rho = 0.0; rho <= M_PI/2.0; rho += dRho) {
-  //   float dTheta = sin(rho) * 2 * M_PI;
-  //
-  // }
+  // iterate through all the directions
+  #pragma omp parallel for
+  for (int i = 0; i < 129; i+=20) {
+    BSPTree* t = new BSPTree(*to);
+    BSPTree* p = NULL;
+    t->largestPart(args->printing_width, args->printing_height, args->printing_length, p);
+    glm::vec3 curNorm = glm::normalize(uniNorms[i]);
+    printf("\t\t\tCutting with normal (%f, %f, %f)...\n", curNorm.x, curNorm.y, curNorm.z);
 
-  std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> newTSet;
-
-  // #pragma omp parallel for
-  for (unsigned int i = 0; i < uniNorms.size(); ++i) {
-    printf("normal loop %u\n", i);
-    // Genate all cuts with given norm uniNorms[i] and offsets
+    // figure out how many cuts we have to make in this particular direction
     float curOffset, maxOffset;
-    p->getMinMaxOffsetsAlongNorm(uniNorms[i], curOffset, maxOffset);
+    p->getMinMaxOffsetsAlongNorm(curNorm, curOffset, maxOffset);
 
-    printf("num slices = %f\n", (maxOffset - curOffset)/args->offset_increment);
+    printf("\t\t\tnum slices = %f\n", (maxOffset - curOffset - args->offset_increment)/args->offset_increment);
+    // printf("min off %f max off %f\n", curOffset, maxOffset);
 
-    typedef std::pair<std::pair<float, float>, std::pair<BSPTree*, BSPTree*> > CutListElem;
-    typedef std::list< CutListElem > CutList;
+    std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> potentialCuts;
 
-    CutList potentialCuts;
-    while(curOffset <= maxOffset) {
-      // printf("cutting at %f\n", curOffset);
-      p->chop(uniNorms[i], curOffset);
-      potentialCuts.push_back(std::make_pair(std::make_pair(0.0, curOffset), std::make_pair(p->leftChild, p->rightChild)));
+    int numSlices = (int)floor((maxOffset - curOffset - args->offset_increment)/args->offset_increment);
+    int j = 0;
+
+    while(j < numSlices) {
+      j++;
+      curOffset += args->offset_increment;
+      // glm::vec3 pop = curOffset * curNorm;
+
+      // printf("offset %f, pop %f %f %f\n", curOffset, pop.x, pop.y, pop.z);
+
+      // chop p into two pieces at the plane defined by curNorm and curOffset
+      p->chop(curNorm, curOffset);
+
+      assert(p->leftChild->numVertices() > 0);
+      assert(p->rightChild->numVertices() > 0);
+
+      t->setGrade(args->a_part*t->fPart() + args->a_util*t->fUtil());
+
+      // store in potentialCuts
+      potentialCuts.push(new BSPTree(*t));
+
+      delete p->leftChild;
+      delete p->rightChild;
       p->leftChild = NULL;
       p->rightChild = NULL;
-      curOffset += args->offset_increment;
     }
 
-    // Evaluate objective functions:
-    // fPart
-    for (CutList::iterator iter = potentialCuts.begin(); iter != potentialCuts.end(); ++iter) {
-      p->setOffset(iter->first.second);
-      p->leftChild = iter->second.first;
-      p->rightChild = iter->second.second;
-
-      iter->first.first += args->a_part * t->fPart();
-    }
-
-    for (CutList::iterator iter = potentialCuts.begin(); iter != potentialCuts.end(); ++iter) {
-      p->setOffset(iter->first.second);
-      p->leftChild = iter->second.first;
-      p->rightChild = iter->second.second;
-      t->setGrade(iter->first.first);
-      newTSet.push(new BSPTree(*t));
-    }
-
-    p->leftChild = NULL;
-    p->rightChild = NULL;
-  }
-
-  // float square = 0;
-  // float c = 0;
-  float last = 0.0;
-  std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> resultSet;
-  while (!newTSet.empty()) {
-    BSPTree* curT = newTSet.top();
-    // printf("grades in order: %f\n", curT->getGrade());
-    // square += curT->getGrade()*curT->getGrade();
-    newTSet.pop();
-    // TODO only push to resultSet if SufficientlyDifferent(curT, resultSet)
-    // if (sqrt((square + curT->getGrade()*curT->getGrade()) / c) > 0.1) {
-    if (curT->getGrade() != last) {
-      // square += curT->getGrade()*curT->getGrade();
-      // c+=1.0;
-      last = curT->getGrade();
-      resultSet.push(curT);
-    } else {
-      delete curT;
+    while(!potentialCuts.empty()) {
+      resultSet.push(potentialCuts.top());
+      potentialCuts.pop();
     }
   }
+
+  printf("\t\tFINISHED EVALUATING CUTS\n");
 
   return resultSet;
 }
+
+// std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> GLCanvas::evalCuts(BSPTree* t, BSPTree* p) {
+//   printf("ENTERING EVAL CUTS\n");
+//   glm::vec3 un[] = {
+//     glm::vec3(1.0f, 0.0f, 0.0f),
+//     glm::vec3(0.0f, 1.0f, 0.0f),
+//     glm::vec3(0.0f, 0.0f, 1.0f)
+//   };
+//
+//   std::vector<glm::vec3> uniNorms(un, un + sizeof(un) / sizeof(un[0]));
+//
+//   // int counter = 0;
+//   // float dRho = M_PI / 32.0;
+//   // for (float rho = 0.0; rho <= M_PI/2.0; rho += dRho) {
+//   //   float dTheta = sin(rho) * 2 * M_PI;
+//   //
+//   // }
+//
+//   std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> newTSet;
+//
+//   // #pragma omp parallel for
+//   for (unsigned int i = 0; i < uniNorms.size(); ++i) {
+//     printf("normal loop %u\n", i);
+//     // Genate all cuts with given norm uniNorms[i] and offsets
+//     float curOffset, maxOffset;
+//     p->getMinMaxOffsetsAlongNorm(uniNorms[i], curOffset, maxOffset);
+//
+//     printf("num slices = %f\n", (maxOffset - curOffset)/args->offset_increment);
+//
+//     typedef std::pair<std::pair<float, float>, std::pair<BSPTree*, BSPTree*> > CutListElem;
+//     typedef std::list< CutListElem > CutList;
+//
+//     CutList potentialCuts;
+//     while(curOffset <= maxOffset) {
+//       // printf("cutting at %f\n", curOffset);
+//       p->chop(uniNorms[i], curOffset);
+//       potentialCuts.push_back(std::make_pair(std::make_pair(0.0, curOffset), std::make_pair(p->leftChild, p->rightChild)));
+//       p->leftChild = NULL;
+//       p->rightChild = NULL;
+//       curOffset += args->offset_increment;
+//     }
+//
+//     // Evaluate objective functions:
+//     // fPart
+//     for (CutList::iterator iter = potentialCuts.begin(); iter != potentialCuts.end(); ++iter) {
+//       p->setOffset(iter->first.second);
+//       p->leftChild = iter->second.first;
+//       p->rightChild = iter->second.second;
+//
+//       iter->first.first += args->a_part * t->fPart();
+//     }
+//
+//     for (CutList::iterator iter = potentialCuts.begin(); iter != potentialCuts.end(); ++iter) {
+//       p->setOffset(iter->first.second);
+//       p->leftChild = iter->second.first;
+//       p->rightChild = iter->second.second;
+//       t->setGrade(iter->first.first);
+//       newTSet.push(new BSPTree(*t));
+//     }
+//
+//     p->leftChild = NULL;
+//     p->rightChild = NULL;
+//   }
+//
+//   // float square = 0;
+//   // float c = 0;
+//   float last = 0.0;
+//   std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> resultSet;
+//   while (!newTSet.empty()) {
+//     BSPTree* curT = newTSet.top();
+//     // printf("grades in order: %f\n", curT->getGrade());
+//     // square += curT->getGrade()*curT->getGrade();
+//     newTSet.pop();
+//     // TODO only push to resultSet if SufficientlyDifferent(curT, resultSet)
+//     // if (sqrt((square + curT->getGrade()*curT->getGrade()) / c) > 0.1) {
+//     if (curT->getGrade() != last) {
+//       // square += curT->getGrade()*curT->getGrade();
+//       // c+=1.0;
+//       last = curT->getGrade();
+//       resultSet.push(curT);
+//     } else {
+//       delete curT;
+//     }
+//   }
+//
+//   return resultSet;
+// }
+
+glm::vec3 GLCanvas::uniNorms[129] = {
+      glm::vec3(-0.000000, -0.000000, 1.000000),
+      glm::vec3(1.000000, -0.000000, 0.000000),
+      glm::vec3(0.000000, 1.000000, 0.000000),
+      glm::vec3(0.707107, 0.707107, 0.000000),
+      glm::vec3(-0.000000, 0.707107, 0.707107),
+      glm::vec3(-0.707107, 0.707107, -0.000000),
+      glm::vec3(0.000000, 0.707107, -0.707107),
+      glm::vec3(0.707107, -0.000000, -0.707107),
+      glm::vec3(0.707107, -0.000000, 0.707107),
+      glm::vec3(-0.418436, 0.806116, -0.418436),
+      glm::vec3(-0.806116, 0.418436, -0.418436),
+      glm::vec3(-0.418436, 0.418436, -0.806116),
+      glm::vec3(-0.418436, 0.806116, 0.418436),
+      glm::vec3(-0.418436, 0.418436, 0.806116),
+      glm::vec3(-0.806116, 0.418436, 0.418436),
+      glm::vec3(0.418436, 0.806116, 0.418436),
+      glm::vec3(0.806116, 0.418436, 0.418436),
+      glm::vec3(0.418436, 0.418436, 0.806116),
+      glm::vec3(0.418436, 0.806116, -0.418436),
+      glm::vec3(0.418436, 0.418436, -0.806116),
+      glm::vec3(0.806116, 0.418436, -0.418436),
+      glm::vec3(0.948730, -0.000000, 0.316088),
+      glm::vec3(0.316091, -0.000000, -0.948729),
+      glm::vec3(0.000000, 0.948730, -0.316088),
+      glm::vec3(-0.316088, 0.948730, -0.000000),
+      glm::vec3(-0.000000, 0.948730, 0.316088),
+      glm::vec3(0.316088, 0.948730, 0.000000),
+      glm::vec3(0.948730, 0.316088, 0.000000),
+      glm::vec3(-0.000000, 0.316088, 0.948730),
+      glm::vec3(-0.948730, 0.316088, -0.000000),
+      glm::vec3(0.000000, 0.316088, -0.948730),
+      glm::vec3(0.948730, -0.000000, -0.316088),
+      glm::vec3(0.316088, -0.000000, 0.948730),
+      glm::vec3(-0.200776, 0.379965, -0.902948),
+      glm::vec3(-0.379965, 0.200776, -0.902948),
+      glm::vec3(-0.173078, 0.173078, -0.969581),
+      glm::vec3(-0.902948, 0.379965, 0.200776),
+      glm::vec3(-0.902948, 0.200776, 0.379965),
+      glm::vec3(-0.969581, 0.173078, 0.173078),
+      glm::vec3(0.200776, 0.379965, 0.902948),
+      glm::vec3(0.379965, 0.200776, 0.902948),
+      glm::vec3(0.173078, 0.173078, 0.969581),
+      glm::vec3(0.902948, 0.379965, -0.200776),
+      glm::vec3(0.902947, 0.200776, -0.379967),
+      glm::vec3(0.969581, 0.173078, -0.173078),
+      glm::vec3(0.173078, 0.969581, -0.173078),
+      glm::vec3(0.200776, 0.902947, -0.379967),
+      glm::vec3(0.379967, 0.902947, -0.200776),
+      glm::vec3(0.173078, 0.173078, -0.969581),
+      glm::vec3(0.379967, 0.200776, -0.902947),
+      glm::vec3(0.200776, 0.379965, -0.902948),
+      glm::vec3(0.434333, 0.636928, -0.636928),
+      glm::vec3(0.636928, 0.434333, -0.636928),
+      glm::vec3(0.636928, 0.636928, -0.434333),
+      glm::vec3(0.173078, 0.969581, 0.173078),
+      glm::vec3(0.379967, 0.902947, 0.200776),
+      glm::vec3(0.200776, 0.902947, 0.379967),
+      glm::vec3(0.969581, 0.173078, 0.173078),
+      glm::vec3(0.902947, 0.200776, 0.379967),
+      glm::vec3(0.902948, 0.379965, 0.200776),
+      glm::vec3(0.636928, 0.636928, 0.434333),
+      glm::vec3(0.636928, 0.434333, 0.636928),
+      glm::vec3(0.434333, 0.636928, 0.636928),
+      glm::vec3(-0.173078, 0.969581, 0.173078),
+      glm::vec3(-0.200776, 0.902947, 0.379967),
+      glm::vec3(-0.379967, 0.902947, 0.200776),
+      glm::vec3(-0.173078, 0.173078, 0.969581),
+      glm::vec3(-0.379967, 0.200776, 0.902947),
+      glm::vec3(-0.200776, 0.379965, 0.902948),
+      glm::vec3(-0.434333, 0.636928, 0.636928),
+      glm::vec3(-0.636928, 0.434333, 0.636928),
+      glm::vec3(-0.636928, 0.636928, 0.434333),
+      glm::vec3(-0.173078, 0.969581, -0.173078),
+      glm::vec3(-0.379967, 0.902947, -0.200776),
+      glm::vec3(-0.200776, 0.902947, -0.379967),
+      glm::vec3(-0.969581, 0.173078, -0.173078),
+      glm::vec3(-0.902947, 0.200776, -0.379967),
+      glm::vec3(-0.902948, 0.379965, -0.200776),
+      glm::vec3(-0.636928, 0.636928, -0.434333),
+      glm::vec3(-0.636928, 0.434333, -0.636928),
+      glm::vec3(-0.434333, 0.636928, -0.636928),
+      glm::vec3(0.519721, -0.000000, 0.854336),
+      glm::vec3(0.854336, -0.000000, -0.519721),
+      glm::vec3(0.000000, 0.519721, -0.854336),
+      glm::vec3(-0.854336, 0.519721, -0.000000),
+      glm::vec3(-0.000000, 0.519721, 0.854336),
+      glm::vec3(0.854336, 0.519721, 0.000000),
+      glm::vec3(0.139167, 0.990269, 0.000000),
+      glm::vec3(0.000000, 0.990269, 0.139167),
+      glm::vec3(-0.139167, 0.990269, -0.000000),
+      glm::vec3(0.000000, 0.990269, -0.139167),
+      glm::vec3(0.139167, -0.000000, -0.990269),
+      glm::vec3(0.990269, -0.000000, 0.139167),
+      glm::vec3(0.779257, 0.590606, -0.209624),
+      glm::vec3(0.209626, 0.590606, -0.779257),
+      glm::vec3(0.209626, 0.779256, -0.590607),
+      glm::vec3(0.209624, 0.590606, 0.779257),
+      glm::vec3(0.779257, 0.590606, 0.209624),
+      glm::vec3(0.590608, 0.779256, 0.209624),
+      glm::vec3(-0.779257, 0.590606, 0.209624),
+      glm::vec3(-0.209626, 0.590606, 0.779257),
+      glm::vec3(-0.209626, 0.779256, 0.590607),
+      glm::vec3(-0.209624, 0.590606, -0.779257),
+      glm::vec3(-0.779257, 0.590606, -0.209626),
+      glm::vec3(-0.590608, 0.779256, -0.209624),
+      glm::vec3(-0.209624, 0.779257, -0.590606),
+      glm::vec3(-0.779256, 0.209624, -0.590608),
+      glm::vec3(-0.590606, 0.209624, -0.779257),
+      glm::vec3(-0.590608, 0.779256, 0.209624),
+      glm::vec3(-0.590608, 0.209624, 0.779256),
+      glm::vec3(-0.779257, 0.209624, 0.590606),
+      glm::vec3(0.209624, 0.779256, 0.590608),
+      glm::vec3(0.779256, 0.209624, 0.590608),
+      glm::vec3(0.590606, 0.209624, 0.779257),
+      glm::vec3(0.590608, 0.779256, -0.209624),
+      glm::vec3(0.590608, 0.209624, -0.779256),
+      glm::vec3(0.779257, 0.209624, -0.590606),
+      glm::vec3(0.854336, -0.000000, 0.519721),
+      glm::vec3(0.519721, -0.000000, -0.854336),
+      glm::vec3(0.000000, 0.854336, -0.519721),
+      glm::vec3(-0.519721, 0.854336, -0.000000),
+      glm::vec3(-0.000000, 0.854336, 0.519721),
+      glm::vec3(0.519721, 0.854336, 0.000000),
+      glm::vec3(0.990269, 0.139167, 0.000000),
+      glm::vec3(-0.000000, 0.139167, 0.990269),
+      glm::vec3(-0.990269, 0.139167, -0.000000),
+      glm::vec3(0.000000, 0.139167, -0.990269),
+      glm::vec3(0.990269, -0.000000, -0.139167),
+      glm::vec3(0.139167, -0.000000, 0.990269)
+};
