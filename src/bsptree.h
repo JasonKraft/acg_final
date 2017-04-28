@@ -42,6 +42,11 @@ public:
 	}
 	float getGrade() const { return grade; }
 	int numVertices() const { return myMesh.numVertices(); }
+	glm::vec3 getBoundingBoxDims() {
+		BSPTree* p = NULL;
+		this->largestPart(args->printing_width, args->printing_height, args->printing_length, p);
+		return p->myMesh.getBoundingBoxDims();
+	}
 
 	// MODIFIERS
 	void setNormal(const glm::vec3& n) { normal = n; }

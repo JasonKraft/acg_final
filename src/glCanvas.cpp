@@ -502,7 +502,7 @@ BSPTree* GLCanvas::beamSearch(BSPTree* tree) {
 
   // continue searching until all trees in currentBSPs fit in the working volume of the printer
   int iterationCounter = 0;
-  while (!allAtGoal(currentBSPs) && iterationCounter < 10) {
+  while (!allAtGoal(currentBSPs) ) {
     iterationCounter++;
     printf("\tITERATION %d\n", iterationCounter);
 
@@ -539,7 +539,7 @@ BSPTree* GLCanvas::beamSearch(BSPTree* tree) {
         resultSet.pop();
       }
 
-      delete t;
+      // delete t;
     }
 
     // find all empty spots in currentBSPs and fill them with the top
@@ -560,10 +560,14 @@ BSPTree* GLCanvas::beamSearch(BSPTree* tree) {
   }
 
   unsigned int bestTreeIndex = 0;
-  for (unsigned int i = 1; i < currentBSPs.size(); ++i) {
+  for (unsigned int i = 0; i < currentBSPs.size(); ++i) {
     if (currentBSPs[bestTreeIndex]->getGrade() > currentBSPs[i]->getGrade()) {
       bestTreeIndex = i;
     }
+
+    glm::vec3 d = currentBSPs[i]->getBoundingBoxDims();
+
+    printf("largest part dimensions %f %f %f\n", d.x, d.y, d.z);
 
     if (currentBSPs[i]->fitsInVolume(args->printing_width,args->printing_height,args->printing_length)) {
       printf("%d fits!\n", i);
@@ -659,18 +663,18 @@ BSPTree* GLCanvas::beamSearch(BSPTree* tree) {
 //   return currentBSPs[bestTreeIndex];
 // }
 
-std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> GLCanvas::evalCuts(BSPTree* to, BSPTree* po) {
+std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> GLCanvas::evalCuts(BSPTree* t, BSPTree* p) {
   printf("\t\tSTARTED EVALUATING CUTS\n");
 
   // stores all the cuts we make
   std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> resultSet;
 
   // iterate through all the directions
-  #pragma omp parallel for
+  // #pragma omp parallel for
   for (int i = 0; i < 129; i+=20) {
-    BSPTree* t = new BSPTree(*to);
-    BSPTree* p = NULL;
-    t->largestPart(args->printing_width, args->printing_height, args->printing_length, p);
+    // BSPTree* t = new BSPTree(*to);
+    // BSPTree* p = NULL;
+    // t->largestPart(args->printing_width, args->printing_height, args->printing_length, p);
     glm::vec3 curNorm = glm::normalize(uniNorms[i]);
     printf("\t\t\tCutting with normal (%f, %f, %f)...\n", curNorm.x, curNorm.y, curNorm.z);
 
