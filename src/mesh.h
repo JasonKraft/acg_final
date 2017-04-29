@@ -56,6 +56,7 @@ public:
   // VERTICES
   int numVertices() const { return vertices.size(); }
   Vertex* addVertex(const glm::vec3 &pos);
+  Vertex* addVertex(const glm::vec3 &pos, bool addToBoundingBox);
   // look up vertex by index from original .obj file
   Vertex* getVertex(int i) const {
     assert (i >= 0 && i < numVertices());

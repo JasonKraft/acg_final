@@ -31,6 +31,10 @@ Mesh::Mesh(const Mesh &oldMesh) {
     Vertex* c = vertices[(*t)[2]->getIndex()];
     addTriangle(a,b,c);
   }
+
+  // copying the dimensions of the old bounding box because we don't want to the extra
+  // vertices from the pruned triangles to influence the bounding box
+  bbox.Set(oldMesh.bbox.getMin(), oldMesh.bbox.getMax());
 }
 
 // =======================================================================
@@ -98,6 +102,19 @@ Vertex* Mesh::addVertex(const glm::vec3 &position) {
     bbox = BoundingBox(position,position);
   else
     bbox.Extend(position);
+  return v;
+}
+
+Vertex* Mesh::addVertex(const glm::vec3 &position, bool addToBoundingBox) {
+  int index = numVertices();
+  Vertex *v = new Vertex(index, position);
+  vertices.push_back(v);
+  if (addToBoundingBox) {
+    if (numVertices() == 1)
+      bbox = BoundingBox(position,position);
+    else
+      bbox.Extend(position);
+  }
   return v;
 }
 
@@ -344,37 +361,7 @@ bool Mesh::fitsInVolume(float width, float height, float length) {
 
   // for now just use axis-aligned bounding box
   // and sort their dimensions just as before
-  edgeshashtype::iterator iter = edges.begin();
-  glm::vec3 extremeMin = iter->second->getStartVertex()->getPos();
-  glm::vec3 extremeMax = iter->second->getStartVertex()->getPos();
-  iter++;
-  for (; iter != edges.end(); ++iter) {
-    glm::vec3 curVec = iter->second->getStartVertex()->getPos();
-    float x = curVec.x;
-    float y = curVec.y;
-    float z = curVec.z;
-    if (x < extremeMin.x) {
-      extremeMin.x = x;
-    }
-    if (y < extremeMin.y) {
-      extremeMin.y = y;
-    }
-    if (z < extremeMin.z) {
-      extremeMin.z = z;
-    }
-
-    if (x > extremeMax.x) {
-      extremeMax.x = x;
-    }
-    if (y > extremeMax.y) {
-      extremeMax.y = y;
-    }
-    if (z > extremeMax.z) {
-      extremeMax.z = z;
-    }
-  }
-  // glm::vec3 boundingBoxDimensions = bbox.getMax() - bbox.getMin();
-  glm::vec3 boundingBoxDimensions = extremeMax - extremeMin;
+  glm::vec3 boundingBoxDimensions = bbox.getMax() - bbox.getMin();
   float bdims[] = {boundingBoxDimensions.x, boundingBoxDimensions.y, boundingBoxDimensions.z};
   int bsmallIndex = 0, blargeIndex = 0;
   for (int i = 0; i < 3; ++i) {
@@ -396,30 +383,6 @@ bool Mesh::fitsInVolume(float width, float height, float length) {
 // helper function to calculate the fPart objective function
 // estimates the number of print volumes required to make the current part
 int Mesh::numPrintVolumes(float width, float height, float length) {
-  // // sort the dimensions of our working volume into small, medium, and large dimensions
-  // float dims[] = {width, height, length};
-  // int smallIndex = 0, largeIndex = 0;
-  // for (int i = 1; i < 3; ++i) {
-  //   if (dims[i] < dims[smallIndex]) { smallIndex = i; }
-  //   if (dims[i] > dims[largeIndex]) { largeIndex = i; }
-  // }
-  // float small = dims[smallIndex];
-  // float medium = dims[3-smallIndex-largeIndex];
-  // float large = dims[largeIndex];
-  //
-  // // for now just use axis-aligned bounding box
-  // // and sort their dimensions just as before
-  // glm::vec3 boundingBoxDimensions = bbox.getMax() - bbox.getMin();
-  // float bdims[] = {boundingBoxDimensions.x, boundingBoxDimensions.y, boundingBoxDimensions.z};
-  // int bsmallIndex = 0, blargeIndex = 0;
-  // for (int i = 0; i < 3; ++i) {
-  //   if (bdims[i] < bdims[bsmallIndex]) { bsmallIndex = i; }
-  //   if (bdims[i] > bdims[blargeIndex]) { blargeIndex = i; }
-  // }
-  //
-  // float bsmall = bdims[bsmallIndex];
-  // float bmedium = bdims[3-bsmallIndex-blargeIndex];
-  // float blarge = bdims[blargeIndex];
 
   // sort the dimensions of our working volume into small, medium, and large dimensions
   float dims[] = {width, height, length};
@@ -439,37 +402,7 @@ int Mesh::numPrintVolumes(float width, float height, float length) {
 
   // for now just use axis-aligned bounding box
   // and sort their dimensions just as before
-  edgeshashtype::iterator iter = edges.begin();
-  glm::vec3 extremeMin = iter->second->getStartVertex()->getPos();
-  glm::vec3 extremeMax = iter->second->getStartVertex()->getPos();
-  iter++;
-  for (; iter != edges.end(); ++iter) {
-    glm::vec3 curVec = iter->second->getStartVertex()->getPos();
-    float x = curVec.x;
-    float y = curVec.y;
-    float z = curVec.z;
-    if (x < extremeMin.x) {
-      extremeMin.x = x;
-    }
-    if (y < extremeMin.y) {
-      extremeMin.y = y;
-    }
-    if (z < extremeMin.z) {
-      extremeMin.z = z;
-    }
-
-    if (x > extremeMax.x) {
-      extremeMax.x = x;
-    }
-    if (y > extremeMax.y) {
-      extremeMax.y = y;
-    }
-    if (z > extremeMax.z) {
-      extremeMax.z = z;
-    }
-  }
-  // glm::vec3 boundingBoxDimensions = bbox.getMax() - bbox.getMin();
-  glm::vec3 boundingBoxDimensions = extremeMax - extremeMin;
+  glm::vec3 boundingBoxDimensions = bbox.getMax() - bbox.getMin();
   float bdims[] = {boundingBoxDimensions.x, boundingBoxDimensions.y, boundingBoxDimensions.z};
   int bsmallIndex = 0, blargeIndex = 0;
   for (int i = 0; i < 3; ++i) {
@@ -494,36 +427,6 @@ int Mesh::numPrintVolumes(float width, float height, float length) {
 }
 
 glm::vec3 Mesh::getBoundingBoxDims() {
-  edgeshashtype::iterator iter = edges.begin();
-  glm::vec3 extremeMin = iter->second->getStartVertex()->getPos();
-  glm::vec3 extremeMax = iter->second->getStartVertex()->getPos();
-  iter++;
-  for (; iter != edges.end(); ++iter) {
-    glm::vec3 curVec = iter->second->getStartVertex()->getPos();
-    float x = curVec.x;
-    float y = curVec.y;
-    float z = curVec.z;
-    if (x < extremeMin.x) {
-      extremeMin.x = x;
-    }
-    if (y < extremeMin.y) {
-      extremeMin.y = y;
-    }
-    if (z < extremeMin.z) {
-      extremeMin.z = z;
-    }
-
-    if (x > extremeMax.x) {
-      extremeMax.x = x;
-    }
-    if (y > extremeMax.y) {
-      extremeMax.y = y;
-    }
-    if (z > extremeMax.z) {
-      extremeMax.z = z;
-    }
-  }
-  // glm::vec3 boundingBoxDimensions = bbox.getMax() - bbox.getMin();
-  glm::vec3 boundingBoxDimensions = extremeMax - extremeMin;
+  glm::vec3 boundingBoxDimensions = bbox.getMax() - bbox.getMin();
   return boundingBoxDimensions;
 }
