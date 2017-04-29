@@ -31,6 +31,7 @@ Mesh::Mesh(const Mesh &oldMesh) {
     Vertex* c = vertices[(*t)[2]->getIndex()];
     addTriangle(a,b,c);
   }
+
 }
 
 // =======================================================================

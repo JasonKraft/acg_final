@@ -89,6 +89,14 @@ public:
 	}
 	glm::vec3 LightPosition() const { return myMesh.LightPosition(); }
 
+	void clearNonLeaves() {
+		if (!isLeaf()) {
+			myMesh.clear();
+			leftChild->clearNonLeaves();
+			rightChild->clearNonLeaves();
+		}
+	}
+
 	// ===============
 	// CUTTING MESH FUNCTIONS
 	void chop(const glm::vec3& normal, float offset);
