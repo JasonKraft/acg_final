@@ -494,6 +494,9 @@ bool allAtGoal(const std::vector<BSPTree*> &currentBSPs) {
 
 BSPTree* GLCanvas::beamSearch(BSPTree* tree) {
   printf("STARTING BEAM SEARCH...\n");
+  if (tree->fitsInVolume(args->printing_width, args->printing_height, args->printing_length)) {
+    return tree;
+  }
   // store our search beam in a vector
   std::vector<BSPTree*> currentBSPs(args->beam_width, NULL);
 
@@ -587,13 +590,18 @@ std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> GLCanva
 
   // stores all the cuts we make
   std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> resultSet;
+  // glm::vec3 uniNorm[] = {
+  //   glm::vec3(1,0,0),
+  //   glm::vec3(0,1,0),
+  //   glm::vec3(0,0,1)
+  // };
 
   // iterate through all the directions
-  // #pragma omp parallel for
-  for (int i = 0; i < 129; i+=20) {
+  // #pragma omp parallel for shared(resultSet)
+  for (int i = 0; i < 6; i+=1) {
     // BSPTree* t = new BSPTree(*to);
     // BSPTree* p = NULL;
-    // t->largestPart(args->printing_width, args->printing_height, args->printing_length, p);
+    t->largestPart(args->printing_width, args->printing_height, args->printing_length, p);
     glm::vec3 curNorm = glm::normalize(uniNorms[i]);
     printf("\t\t\tCutting with normal (%f, %f, %f)...\n", curNorm.x, curNorm.y, curNorm.z);
 
@@ -617,29 +625,25 @@ std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> GLCanva
       // printf("offset %f, pop %f %f %f\n", curOffset, pop.x, pop.y, pop.z);
 
       // chop p into two pieces at the plane defined by curNorm and curOffset
-      printf("chopping\n");
       p->chop(curNorm, curOffset);
 
       assert(p->leftChild->numVertices() > 0);
       assert(p->rightChild->numVertices() > 0);
 
-      printf("setting grade\n");
       t->setGrade(args->a_part*t->fPart() + args->a_util*t->fUtil());
 
       // store in potentialCuts
-      printf("copying\n");
       potentialCuts.push(new BSPTree(*t));
 
-      printf("blah\n");
-      delete p->leftChild;
-      delete p->rightChild;
+      // delete p->leftChild;
+      // delete p->rightChild;
       p->leftChild = NULL;
       p->rightChild = NULL;
     }
-
     std::list<float> prevGrades;
     while(!potentialCuts.empty()) {
       if (prevGrades.size() == 0) {
+
         resultSet.push(potentialCuts.top());
         prevGrades.push_back(potentialCuts.top()->getGrade());
         potentialCuts.pop();
@@ -650,6 +654,7 @@ std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> GLCanva
         }
         // printf("RMSE: %f\n", sqrt(rmse / prevGrades.size()));
         if (sqrt(rmse / prevGrades.size()) > 0.1 * sqrt(args->printing_width * args->printing_width + args->printing_height * args->printing_height + args->printing_length * args->printing_length)) {
+          // potentialCuts.top()->clearNonLeaves();
           resultSet.push(potentialCuts.top());
           prevGrades.push_back(potentialCuts.top()->getGrade());
           potentialCuts.pop();
