@@ -89,6 +89,14 @@ public:
 	}
 	glm::vec3 LightPosition() const { return myMesh.LightPosition(); }
 
+	void clearNonLeaves() {
+		if (!isLeaf()) {
+			myMesh.clear();
+			leftChild->clearNonLeaves();
+			rightChild->clearNonLeaves();
+		}
+	}
+
 	// ===============
 	// CUTTING MESH FUNCTIONS
 	void chop(const glm::vec3& normal, float offset);
@@ -106,15 +114,6 @@ public:
 	}
 	int largestPart(float width, float height, float length, BSPTree* &lp);
 	void getMinMaxOffsetsAlongNorm(const glm::vec3 &normal, float &minOffset, float &maxOffset);
-	int getTotalPrintVolumes() {
-		// printf("GET TOTAL PRINT VOLUMES");
-		// gets the total number of print volumes that can fit in all the partitions seperately
-		if (isLeaf()) {
-			return myMesh.numPrintVolumes(args->printing_width, args->printing_height, args->printing_length);
-		}
-
-		return leftChild->getTotalPrintVolumes() + rightChild->getTotalPrintVolumes();
-	}
 
 	// ===============
 	// OBJECTIVE functions
@@ -135,8 +134,7 @@ public:
 			float height = args->printing_height;
 			float length = args->printing_length;
 			float printingVolume = width * height * length;
-			glm::vec3 bbd = myMesh.getBoundingBoxDims();
-			float bbv = bbd.x * bbd.y * bbd.z;
+			float bbv = myMesh.getBBVolume();
 			return 1 - bbv / (myMesh.numPrintVolumes(width, height, length)  * printingVolume);
 		}
 
@@ -149,8 +147,18 @@ public:
 
 private:
 	float CastRay(const glm::vec3& dir, const glm::vec3& origin, const glm::vec3& normal, float offset) const;
-	Triangle* addTriangle(Vertex* a, Vertex* b, Vertex* c, int side, std::vector<std::vector<Vertex*> >& childVertices);
+	Triangle* addTriangle(Vertex* a, Vertex* b, Vertex* c, int side, std::vector<std::vector<Vertex*> >& childVertices, bool addToBoundingBox);
 	void pruneChildMesh(const glm::vec3& normal, float offset, std::vector<Triangle*>& trianglesToRemove);
+
+	int getTotalPrintVolumes() {
+		// printf("GET TOTAL PRINT VOLUMES");
+		// gets the total number of print volumes that can fit in all the partitions seperately
+		if (isLeaf()) {
+			return myMesh.numPrintVolumes(args->printing_width, args->printing_height, args->printing_length);
+		}
+
+		return leftChild->getTotalPrintVolumes() + rightChild->getTotalPrintVolumes();
+	}
 
 	ArgParser *args;
 	unsigned int depth;

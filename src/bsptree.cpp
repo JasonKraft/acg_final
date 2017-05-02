@@ -79,7 +79,9 @@ float BSPTree::CastRay(const glm::vec3& dir, const glm::vec3& origin, const glm:
 // function that adds a triangle to the left/right child mesh
 // denoted by the side parameter; 0=right, 1=left for indexing in childVertices
 // needs to check whether that vertex has already been added to the mesh
-Triangle* BSPTree::addTriangle(Vertex* a, Vertex* b, Vertex* c, int side, std::vector<std::vector<Vertex*> >& childVertices) {
+// if triangle being added is intersecting the plane, don't want its vertices to impact the bounding box
+Triangle* BSPTree::addTriangle(Vertex* a, Vertex* b, Vertex* c, int side, std::vector<std::vector<Vertex*> >& childVertices,
+																bool addToBoundingBox) {
 	Vertex* newA;
 	Vertex* newB;
 	Vertex* newC;
@@ -90,21 +92,21 @@ Triangle* BSPTree::addTriangle(Vertex* a, Vertex* b, Vertex* c, int side, std::v
 	if (childVertices[a->getIndex()][side] != NULL) {
 		newA = childVertices[a->getIndex()][side];
 	} else {
-		newA = myMesh.addVertex(a->getPos());
+		newA = myMesh.addVertex(a->getPos(), addToBoundingBox);
 		childVertices[a->getIndex()][side] = newA;
 	}
 
 	if (childVertices[b->getIndex()][side] != NULL) {
 		newB = childVertices[b->getIndex()][side];
 	} else {
-		newB = myMesh.addVertex(b->getPos());
+		newB = myMesh.addVertex(b->getPos(), addToBoundingBox);
 		childVertices[b->getIndex()][side] = newB;
 	}
 
 	if (childVertices[c->getIndex()][side] != NULL) {
 		newC = childVertices[c->getIndex()][side];
 	} else {
-		newC = myMesh.addVertex(c->getPos());
+		newC = myMesh.addVertex(c->getPos(), addToBoundingBox);
 		childVertices[c->getIndex()][side] = newC;
 	}
 
@@ -405,21 +407,21 @@ void BSPTree::chop(const glm::vec3& normal, float offset) {
 		// triangle to the right of the plane, add to the right child
 		if (distA >= 0 && distB >= 0 && distC >= 0) {
 			// printf("adding right\n");
-			rightChild->addTriangle(avert,bvert,cvert,0,childVertices);
+			rightChild->addTriangle(avert,bvert,cvert,0,childVertices, true);
 			continue;
 		}
 
 		// triangle to the left of the plane, add to the left child
 		if (distA <= 0 && distB <= 0 && distC <= 0) {
 			// printf("adding left\n");
-			leftChild->addTriangle(avert,bvert,cvert,1,childVertices);
+			leftChild->addTriangle(avert,bvert,cvert,1,childVertices, true);
 			continue;
 		}
 
 		// printf("adding to both\n");
 		// triangle intersecting the plane, add it to both children and to vector
-		Triangle *RT = rightChild->addTriangle(avert,bvert,cvert,0,childVertices);
-		Triangle *LT = leftChild->addTriangle(avert,bvert,cvert,1,childVertices);
+		Triangle *RT = rightChild->addTriangle(avert,bvert,cvert,0,childVertices, false);
+		Triangle *LT = leftChild->addTriangle(avert,bvert,cvert,1,childVertices, false);
 
 		trianglesToRemoveR.push_back(RT);
 		trianglesToRemoveL.push_back(LT);
@@ -461,8 +463,6 @@ int BSPTree::largestPart(float width, float height, float length, BSPTree* &lp) 
 	void BSPTree::getMinMaxOffsetsAlongNorm(const glm::vec3 &normal, float &minOffset, float &maxOffset) {
 		assert(myMesh.numVertices() > 0);
 
-		// minOffset = glm::dot(normal, myMesh.getVertex(0)->getPos());
-		// maxOffset = glm::dot(normal, myMesh.getVertex(0)->getPos());
 		edgeshashtype::iterator iter = myMesh.edges.begin();
 
 		minOffset = glm::dot(normal, (*iter).second->getStartVertex()->getPos());
