@@ -107,7 +107,10 @@ if (APPLE)
 else()
   if (UNIX)
     # LINUX
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+    find_package(OpenMP)
+    if (OPENMP_FOUND)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -std=c++0x")
+    endif()
     set_target_properties (${my_executable} PROPERTIES COMPILE_FLAGS "-g -Wall -pedantic ${BUILD_32}")
   else()
     # WINDOWS

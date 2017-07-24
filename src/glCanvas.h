@@ -14,13 +14,16 @@
 #include <cstdlib>
 #include <cassert>
 #include <string>
+#include <list>
+#include <queue>
 
 #include "boundingbox.h"
 
 class ArgParser;
 class Camera;
-
-class Mesh;
+class BSPTree;
+class BSPTreeGreaterThan;
+// class Mesh;
 
 // ====================================================================
 // NOTE:  All the methods and variables of this class are static
@@ -32,7 +35,8 @@ public:
 
   // various static variables
   static ArgParser *args;
-  static Mesh *mesh;
+  // static Mesh *mesh;
+  static BSPTree *tree;
 
   static BoundingBox bbox;
   static Camera* camera;
@@ -74,6 +78,12 @@ public:
   static void mousemotionCB(GLFWwindow *window, double x, double y);
   static void keyboardCB(GLFWwindow *window, int key, int scancode, int action, int mods);
   static void error_callback(int error, const char* description);
+
+  // Run beam search algorithm
+  static BSPTree* beamSearch(BSPTree* tree);
+  static std::priority_queue<BSPTree*, std::vector<BSPTree*>, BSPTreeGreaterThan> evalCuts(BSPTree* t, BSPTree* p);
+
+  static glm::vec3 uniNorms[129];
 };
 
 // ====================================================================
@@ -82,5 +92,6 @@ public:
 GLuint LoadShaders(const std::string &vertex_file_path,const std::string &fragment_file_path);
 std::string WhichGLError(GLenum &error);
 int HandleGLError(const std::string &message = "", bool ignore = false);
+bool allAtGoal(const std::vector<BSPTree*> &currentBSPs);
 
 #endif

@@ -11,54 +11,120 @@
 int Triangle::next_triangle_id = 0;
 
 // =======================================================================
+// MESH COPY CONSTRUCTOR
+// =======================================================================
+Mesh::Mesh(const Mesh &oldMesh) {
+  args = oldMesh.args;
+  meshColor = oldMesh.meshColor;
+
+  // copy all vertices
+  // this has the added benefit of copying our bounding box
+  for (unsigned int i = 0; i < oldMesh.vertices.size(); ++i) {
+    addVertex(oldMesh.vertices[i]->getPos());
+  }
+
+  // copy all triangles and edges
+  for (triangleshashtype::const_iterator iter = oldMesh.triangles.begin(); iter != oldMesh.triangles.end(); ++iter) {
+    Triangle* t = iter->second;
+    Vertex* a = vertices[(*t)[0]->getIndex()];
+    Vertex* b = vertices[(*t)[1]->getIndex()];
+    Vertex* c = vertices[(*t)[2]->getIndex()];
+    addTriangle(a,b,c);
+  }
+
+  // copying the dimensions of the old bounding box because we don't want to the extra
+  // vertices from the pruned triangles to influence the bounding box
+  bbox.Set(oldMesh.bbox.getMin(), oldMesh.bbox.getMax());
+}
+
+// =======================================================================
 // MESH DESTRUCTOR
 // =======================================================================
 
 Mesh::~Mesh() {
+  clear();
+}
+
+void Mesh::clear() {
+  // printf("asdf\n");
   // delete all the triangles
-  std::vector< std::pair<Triangle*,int> > todo;
-  for (int i = 0; i < triangles.size(); i++) {
-    for (triangleshashtype::iterator iter = triangles[i].begin();
-         iter != triangles[i].end(); iter++) {
-      Triangle *t = iter->second;
-      todo.push_back(std::make_pair(t,i));
-    }
+  std::vector<Triangle*> todo;
+  for (triangleshashtype::iterator iter = triangles.begin();
+       iter != triangles.end(); iter++) {
+    Triangle *t = iter->second;
+    todo.push_back(t);
   }
   int num_triangles = todo.size();
   for (int i = 0; i < num_triangles; i++) {
-    removeTriangle(todo[i].first,todo[i].second);
+    removeTriangle(todo[i]);
   }
   // delete all the vertices
-  int num_objects = numObjects();
-  for (int i = 0; i < num_objects; i++) {
-    int num_vertices = numVertices(i);
-    for (int j = 0; j < num_vertices; j++) {
-        delete vertices[i][j];
-    }
+  int num_vertices = numVertices();
+  for (int i = 0; i < num_vertices; i++) {
+    delete vertices[i];
   }
   cleanupVBOs();
+  // printf("fdklj\n");
+}
+
+// ASSIGNMENT OPERATOR
+Mesh& Mesh::operator= (const Mesh& oldMesh) {
+  args = oldMesh.args;
+  meshColor = oldMesh.meshColor;
+
+  // copy all vertices
+  // this has the added benefit of copying our bounding box
+  for (unsigned int i = 0; i < oldMesh.vertices.size(); ++i) {
+    addVertex(oldMesh.vertices[i]->getPos());
+  }
+
+  // copy all triangles and edges
+  for (triangleshashtype::const_iterator iter = oldMesh.triangles.begin(); iter != oldMesh.triangles.end(); ++iter) {
+    Triangle* t = iter->second;
+    Vertex* a = vertices[(*t)[0]->getIndex()];
+    Vertex* b = vertices[(*t)[1]->getIndex()];
+    Vertex* c = vertices[(*t)[2]->getIndex()];
+    addTriangle(a,b,c);
+  }
+
+  return *this;
 }
 
 // =======================================================================
 // MODIFIERS:   ADD & REMOVE
 // =======================================================================
 
-Vertex* Mesh::addVertex(const glm::vec3 &position, int i) {
-  int index = totalVertices();
-  Vertex *v = new Vertex(index, i, position);
-  vertices[i].push_back(v);
-  total_vertices++;
-  if (totalVertices() == 1)
+Vertex* Mesh::addVertex(const glm::vec3 &position) {
+  int index = numVertices();
+  Vertex *v = new Vertex(index, position);
+  vertices.push_back(v);
+  if (numVertices() == 1)
     bbox = BoundingBox(position,position);
   else
     bbox.Extend(position);
   return v;
 }
 
+Vertex* Mesh::addVertex(const glm::vec3 &position, bool addToBoundingBox) {
+  int index = numVertices();
+  Vertex *v = new Vertex(index, position);
+  vertices.push_back(v);
+  if (addToBoundingBox) {
+    if (numVertices() == 1)
+      bbox = BoundingBox(position,position);
+    else
+      bbox.Extend(position);
+  }
+  return v;
+}
 
-void Mesh::addTriangle(Vertex *a, Vertex *b, Vertex *c, int index) {
+
+Triangle* Mesh::addTriangle(Vertex *a, Vertex *b, Vertex *c) {
+  assert(a != NULL);
+  assert(b != NULL);
+  assert(c != NULL);
   // create the triangle
-  Triangle *t = new Triangle(index);
+  Triangle *t = new Triangle();
   // create the edges
   Edge *ea = new Edge(a,b,t);
   Edge *eb = new Edge(b,c,t);
@@ -71,27 +137,29 @@ void Mesh::addTriangle(Vertex *a, Vertex *b, Vertex *c, int index) {
   ec->setNext(ea);
   // verify these edges aren't already in the mesh
   // (which would be a bug, or a non-manifold mesh)
-  assert (edges[index].find(std::make_pair(a,b)) == edges[index].end());
-  assert (edges[index].find(std::make_pair(b,c)) == edges[index].end());
-  assert (edges[index].find(std::make_pair(c,a)) == edges[index].end());
+  assert (edges.find(std::make_pair(a,b)) == edges.end());
+  assert (edges.find(std::make_pair(b,c)) == edges.end());
+  assert (edges.find(std::make_pair(c,a)) == edges.end());
   // add the edges to the master list
-  edges[index][std::make_pair(a,b)] = ea;
-  edges[index][std::make_pair(b,c)] = eb;
-  edges[index][std::make_pair(c,a)] = ec;
+  edges[std::make_pair(a,b)] = ea;
+  edges[std::make_pair(b,c)] = eb;
+  edges[std::make_pair(c,a)] = ec;
   // connect up with opposite edges (if they exist)
-  edgeshashtype::iterator ea_op = edges[index].find(std::make_pair(b,a));
-  edgeshashtype::iterator eb_op = edges[index].find(std::make_pair(c,b));
-  edgeshashtype::iterator ec_op = edges[index].find(std::make_pair(a,c));
-  if (ea_op != edges[index].end()) { ea_op->second->setOpposite(ea); }
-  if (eb_op != edges[index].end()) { eb_op->second->setOpposite(eb); }
-  if (ec_op != edges[index].end()) { ec_op->second->setOpposite(ec); }
+  edgeshashtype::iterator ea_op = edges.find(std::make_pair(b,a));
+  edgeshashtype::iterator eb_op = edges.find(std::make_pair(c,b));
+  edgeshashtype::iterator ec_op = edges.find(std::make_pair(a,c));
+  if (ea_op != edges.end()) { ea_op->second->setOpposite(ea); }
+  if (eb_op != edges.end()) { eb_op->second->setOpposite(eb); }
+  if (ec_op != edges.end()) { ec_op->second->setOpposite(ec); }
   // add the triangle to the master list
-  assert (triangles[index].find(t->getID()) == triangles[index].end());
-  triangles[index][t->getID()] = t;
+  assert (triangles.find(t->getID()) == triangles.end());
+  triangles[t->getID()] = t;
+
+  return t;
 }
 
 
-void Mesh::removeTriangle(Triangle *t, int i) {
+void Mesh::removeTriangle(Triangle *t) {
   Edge *ea = t->getEdge();
   Edge *eb = ea->getNext();
   Edge *ec = eb->getNext();
@@ -99,10 +167,10 @@ void Mesh::removeTriangle(Triangle *t, int i) {
   Vertex *b = eb->getStartVertex();
   Vertex *c = ec->getStartVertex();
   // remove these elements from master lists
-  edges[i].erase(std::make_pair(a,b));
-  edges[i].erase(std::make_pair(b,c));
-  edges[i].erase(std::make_pair(c,a));
-  triangles[i].erase(t->getID());
+  edges.erase(std::make_pair(a,b));
+  edges.erase(std::make_pair(b,c));
+  edges.erase(std::make_pair(c,a));
+  triangles.erase(t->getID());
   // clean up memory
   delete ea;
   delete eb;
@@ -111,11 +179,25 @@ void Mesh::removeTriangle(Triangle *t, int i) {
 }
 
 
-// Helper function for accessing data in the hash table
-Edge* Mesh::getMeshEdge(Vertex *a, Vertex *b, int index) const {
-  edgeshashtype::const_iterator iter = edges[index].find(std::make_pair(a,b));
-  if (iter == edges[index].end()) return NULL;
+// =======================================================================
+// Helper functions for accessing data in the hash table
+// =======================================================================
+
+Edge* Mesh::getMeshEdge(Vertex *a, Vertex *b) const {
+  edgeshashtype::const_iterator iter = edges.find(std::make_pair(a,b));
+  if (iter == edges.end()) return NULL;
   return iter->second;
+}
+
+Vertex* Mesh::getChildVertex(Vertex *p1, Vertex *p2) const {
+  vphashtype::const_iterator iter = vertex_parents.find(std::make_pair(p1,p2));
+  if (iter == vertex_parents.end()) return NULL;
+  return iter->second;
+}
+
+void Mesh::setParentsChild(Vertex *p1, Vertex *p2, Vertex *child) {
+  assert (vertex_parents.find(std::make_pair(p1,p2)) == vertex_parents.end());
+  vertex_parents[std::make_pair(p1,p2)] = child;
 }
 
 // =======================================================================
@@ -131,10 +213,8 @@ void Mesh::Load() {
     return;
   }
 
-  char prevline[200] = "";
   char line[200] = "";
   char token[100] = "";
-  char token2[100] = "";
   char atoken[100] = "";
   char btoken[100] = "";
   char ctoken[100] = "";
@@ -145,31 +225,18 @@ void Mesh::Load() {
   int vert_count = 0;
   int vert_index = 1;
 
-  assert(vertices.size() == 0);
-
-  vertices.push_back(std::vector<Vertex*>());
-
-
-  //in order for the rendering of multiple objects with different colors to work
-  //obj file must use groups to denote each object. group must be defined after vertices
-
   while (fgets(line, 200, objfile)) {
     int token_count = sscanf (line, "%s\n",token);
-    sscanf (prevline, "%s\n", token2);
     if (token_count == -1) continue;
     a = b = c = d = e = -1;
-
     if (!strcmp(token,"usemtl") ||
 	!strcmp(token,"g")) {
       vert_index = 1;
       index++;
-      vertices.push_back( std::vector<Vertex*>() );
-      edges.push_back(edgeshashtype());
-      triangles.push_back(triangleshashtype());
     } else if (!strcmp(token,"v")) {
       vert_count++;
       sscanf (line, "%s %f %f %f\n",token,&x,&y,&z);
-      addVertex(glm::vec3(x,y,z), index);
+      addVertex(glm::vec3(x,y,z));
     } else if (!strcmp(token,"f")) {
       int num = sscanf (line, "%s %s %s %s\n",token,
 			atoken,btoken,ctoken);
@@ -177,23 +244,19 @@ void Mesh::Load() {
       sscanf (btoken,"%d",&b);
       sscanf (ctoken,"%d",&c);
       assert (num == 4);
-
       a -= vert_index;
       b -= vert_index;
       c -= vert_index;
-      assert (a >= 0 && a < totalVertices());
-      assert (b >= 0 && b < totalVertices());
-      assert (c >= 0 && c < totalVertices());
-      addTriangle(getVertex(a),getVertex(b),getVertex(c), index-1);
+      assert (a >= 0 && a < numVertices());
+      assert (b >= 0 && b < numVertices());
+      assert (c >= 0 && c < numVertices());
+      addTriangle(getVertex(a),getVertex(b),getVertex(c));
     } else if (!strcmp(token,"vt")) {
     } else if (!strcmp(token,"vn")) {
     } else if (token[0] == '#') {
     } else {
       printf ("LINE: '%s'",line);
     }
-
-    //change prevline to current line
-    strcpy(prevline, line);
   }
 
   ComputeGouraudNormals();
@@ -205,52 +268,50 @@ void Mesh::Load() {
 // this function outputs scene into a very simple .obj file
 // =======================================================================
 
-void Mesh::OutputFile() {
-  printf("WRITING SCENE TO FILE\n");
-
-  std::string output_file = args->path + "/output.obj";
-
-  FILE *objfile = fopen(output_file.c_str(),"w");
-  if (objfile == NULL) {
-    std::cout << "ERROR! CANNOT OPEN '" << output_file << "'\n";
-    return;
-  }
-
-  //loop through all the vertices and write all vertices of one object
-  //after finishing the vertices of an object, create a group
-  //then loop through the indices of the faces of this object and print them
-
-  int indexStart = 0;  //index of the starting face of each object
-
-  for (unsigned int i=0; i<vertices.size(); i++) {
-    unsigned int j;
-
-    //writing the vertices in this object to the file
-    for (j=0; j<vertices[i].size(); j++) {
-      glm::vec3 vPos = vertices[i][j]->getPos();
-      fprintf(objfile, "v %.6f %.6f %.6f\n", vPos.x, vPos.y, vPos.z);
-    }
-
-    //create a group
-    //need to also check that this vector of verices isn't empty
-    if (vertices[i].size() > 0) {
-      fprintf(objfile, "g partition%d\n", i);
-    }
-
-    //writing the faces in this object to the file
-    for (j=indexStart; j<triangles.size(); j++) {
-      Triangle *t = triangles[j];
-      if (t->getObjectIndex() == (int)i) {
-        //this face is part of this object
-        //need to add 1 to index number because for vertices it starts at 1 not 0
-        fprintf(objfile, "f %d %d %d\n", (*t)[0]->getIndex()+1, (*t)[1]->getIndex()+1, (*t)[2]->getIndex()+1);
-      } else {
-        indexStart = j;
-        break;
-      }
-    }
-  }
-}
+// void Mesh::OutputFile() {
+//   std::string output_file = args->path + "/output.obj";
+//
+//   FILE *objfile = fopen(output_file.c_str(),"w");
+//   if (objfile == NULL) {
+//     std::cout << "ERROR! CANNOT OPEN '" << output_file << "'\n";
+//     return;
+//   }
+//
+//   //loop through all the vertices and write all vertices of one object
+//   //after finishing the vertices of an object, create a group
+//   //then loop through the indices of the faces of this object and print them
+//
+//   int indexStart = 0;  //index of the starting face of each object
+//
+//   for (unsigned int i=0; i<vertices.size(); i++) {
+//     unsigned int j;
+//
+//     //writing the vertices in this object to the file
+//     for (j=0; j<vertices[i].size(); j++) {
+//       glm::vec3 vPos = vertices[i][j]->getPos();
+//       fprintf(objfile, "v %.6f %.6f %.6f\n", vPos.x, vPos.y, vPos.z);
+//     }
+//
+//     //create a group
+//     //need to also check that this vector of verices isn't empty
+//     if (vertices[i].size() > 0) {
+//       fprintf(objfile, "g partition%d\n", i);
+//     }
+//
+//     //writing the faces in this object to the file
+//     for (j=indexStart; j<triangles.size(); j++) {
+//       Triangle *t = triangles[j];
+//       if (t->getObjectIndex() == (int)i) {
+//         //this face is part of this object
+//         //need to add 1 to index number because for vertices it starts at 1 not 0
+//         fprintf(objfile, "f %d %d %d\n", (*t)[0]->getIndex()+1, (*t)[1]->getIndex()+1, (*t)[2]->getIndex()+1);
+//       } else {
+//         indexStart = j;
+//         break;
+//       }
+//     }
+//   }
+// }
 
 // =======================================================================
 
@@ -258,7 +319,7 @@ void Mesh::OutputFile() {
 void Mesh::ComputeGouraudNormals() {
   int i;
   // clear the normals
-  for (i = 0; i < totalVertices(); i++) {
+  for (i = 0; i < numVertices(); i++) {
     getVertex(i)->clearGouraudNormal();
   }
   // loop through all the triangles incrementing the normal at each vertex
@@ -273,58 +334,99 @@ void Mesh::ComputeGouraudNormals() {
     (*t)[2]->incrGouraudNormal(n);
   }
   // finally, normalize the sum at each vertex
-  for (i = 0; i < totalVertices(); i++) {
+  for (i = 0; i < numVertices(); i++) {
     getVertex(i)->normalizeGouraudNormal();
   }
 }
 
 // =================================================================
 
-// function chop(index, normal, offest)
-// 	Mesh m = meshes[index]
-// 	for each triangle t in m
-// 		get the distance of each vertex of t to the plane
-// 		if each vertex distance is >= 0
-// 			add triangle to right submesh (meshes[index+1])
-// 		else if each vertex distance is <= 0
-// 			add triangle to left submesh (meshes[index+2])
-// 		else
-// 			vector Vab, Vbc, Vca
-// 			vector anew = a + norm(Vab) * castRay(norm(Vab), normal, offset)
-// 			vector bnew = b + norm(Vbc) * castRay(norm(Vbc), normal, offset)
-// 			vector cnew = c + norm(Vca) * castRay(norm(Vca), normal, offset)
-// 			vector p1, p2
-// 			if a is left and b and c are right
-// 				p1 = anew
-// 				p2 = cnew
-// 				meshes[index+1] += triangle(b,p2,p1)
-// 				meshes[index+1] += triangle(c,p2,b)
-// 				meshes[index+2] += triangle(a,p1,p2)
-// 			if b is left and a and c are right
-// 				p1 = anew
-// 				p2 = bnew
-// 				meshes[index+1] += triangle(a,p1,p2)
-// 				meshes[index+1] += triangle(c,a,p2)
-// 				meshes[index+2] += triangle(b,p2,p1)
-// 			if c is left and a and b are right
-// 				p1 = bnew
-// 				p2 = cnew
-// 				meshes[index+1] += triangle(b,p1,p2)
-// 				meshes[index+1] += triangle(a,b,p2)
-// 				meshes[index+2] += triangle(c,p2,p1)
-// 			if a is right and b and c are left
-// 				p1 = anew
-// 				p2 = cnew
-// 				meshes[index+1] += triangle(a,p1,p2)
-// 				meshes[index+2] += triangle(b,p2,p1)
-// 				meshes[index+2] += tirangle(c,p2,b)
-// 			if b is right and a and c are left
-// 				p1 = bnew
-// 				p2 = anew
-// 				meshes[index+1] += triangle
+bool Mesh::fitsInVolume(float width, float height, float length) {
+  // sort the dimensions of our working volume into small, medium, and large dimensions
+  float dims[] = {width, height, length};
+  int smallIndex = 0, largeIndex = 0;
+  for (int i = 1; i < 3; ++i) {
+    if (dims[i] < dims[smallIndex]) { smallIndex = i; }
+    if (dims[i] > dims[largeIndex]) { largeIndex = i; }
+  }
+  float small = dims[smallIndex];
+  float medium;
+  if (smallIndex == largeIndex) {
+    medium = dims[0];
+  } else {
+    medium = dims[3-smallIndex-largeIndex];
+  }
+  // float medium = dims[3-smallIndex-largeIndex];
+  float large = dims[largeIndex];
 
-void Mesh::chop(unsigned int index, const glm::vec3& normal, float offset) {
-  // for (unsigned int i = 0; i < vertices[i].size(); i += 3) {
-  //   glm::vec3
-  // }
+  // for now just use axis-aligned bounding box
+  // and sort their dimensions just as before
+  glm::vec3 boundingBoxDimensions = bbox.getMax() - bbox.getMin();
+  float bdims[] = {boundingBoxDimensions.x, boundingBoxDimensions.y, boundingBoxDimensions.z};
+  int bsmallIndex = 0, blargeIndex = 0;
+  for (int i = 0; i < 3; ++i) {
+    if (bdims[i] < bdims[bsmallIndex]) { bsmallIndex = i; }
+    if (bdims[i] > bdims[blargeIndex]) { blargeIndex = i; }
+  }
+
+  float bsmall = bdims[bsmallIndex];
+  float bmedium;
+  if (bsmallIndex == blargeIndex) {
+    bmedium = bdims[0];
+  } else {
+    bmedium = bdims[3-bsmallIndex-blargeIndex];
+  }
+  float blarge = bdims[blargeIndex];
+  return bsmall <= small && bmedium <= medium && blarge <= large;
+}
+
+// helper function to calculate the fPart objective function
+// estimates the number of print volumes required to make the current part
+int Mesh::numPrintVolumes(float width, float height, float length) {
+
+  // sort the dimensions of our working volume into small, medium, and large dimensions
+  float dims[] = {width, height, length};
+  int smallIndex = 0, largeIndex = 0;
+  for (int i = 1; i < 3; ++i) {
+    if (dims[i] < dims[smallIndex]) { smallIndex = i; }
+    if (dims[i] > dims[largeIndex]) { largeIndex = i; }
+  }
+  float small = dims[smallIndex];
+  float medium;
+  if (smallIndex == largeIndex) {
+    medium = dims[0];
+  } else {
+    medium = dims[3-smallIndex-largeIndex];
+  }
+  float large = dims[largeIndex];
+
+  // for now just use axis-aligned bounding box
+  // and sort their dimensions just as before
+  glm::vec3 boundingBoxDimensions = bbox.getMax() - bbox.getMin();
+  float bdims[] = {boundingBoxDimensions.x, boundingBoxDimensions.y, boundingBoxDimensions.z};
+  int bsmallIndex = 0, blargeIndex = 0;
+  for (int i = 0; i < 3; ++i) {
+    if (bdims[i] < bdims[bsmallIndex]) { bsmallIndex = i; }
+    if (bdims[i] > bdims[blargeIndex]) { blargeIndex = i; }
+  }
+
+  float bsmall = bdims[bsmallIndex];
+  float bmedium;
+  if (bsmallIndex == blargeIndex) {
+    bmedium = bdims[0];
+  } else {
+    bmedium = bdims[3-bsmallIndex-blargeIndex];
+  }
+  float blarge = bdims[blargeIndex];
+
+  int numSmall = (int)ceil(bsmall/small);
+  int numMedium = (int)ceil(bmedium/medium);
+  int numLarge = (int)ceil(blarge/large);
+
+  return std::max(std::max(numSmall, numMedium), numLarge);
+}
+
+glm::vec3 Mesh::getBoundingBoxDims() {
+  glm::vec3 boundingBoxDimensions = bbox.getMax() - bbox.getMin();
+  return boundingBoxDimensions;
 }

@@ -42,7 +42,7 @@ inline float linear_to_srgb(float x) {
   float answer;
   if (x <= 0.0031308)
     answer = 12.92*x;
-  else 
+  else
     answer = (1+SRGB_ALPHA)*(pow(x,1/2.4)-SRGB_ALPHA);
   return answer;
 }
@@ -51,13 +51,13 @@ inline float srgb_to_linear(float x) {
   float answer;
   if (x <= 0.04045)
     answer = x/12.92;
-  else 
+  else
     answer = pow((x+SRGB_ALPHA)/(1+SRGB_ALPHA),2.4);
   return answer;
 }
 
 // =========================================================================
-// utility functions 
+// utility functions
 inline float DistanceBetweenTwoPoints(const glm::vec3 &p1, const glm::vec3 &p2) {
   glm::vec3 v = p1-p2;
   return glm::length(v);
@@ -94,8 +94,8 @@ inline glm::vec3 MirrorDirection(const glm::vec3 &normal, const glm::vec3 &incom
 
 void addEdgeGeometry(std::vector<VBOPosNormalColor> &verts,
                      std::vector<VBOIndexedTri> &tri_indices,
-                     const glm::vec3 &a, const glm::vec3 &b, 
-                     const glm::vec4 &acolor, const glm::vec4 &bcolor, 
+                     const glm::vec3 &a, const glm::vec3 &b,
+                     const glm::vec4 &acolor, const glm::vec4 &bcolor,
                      float a_th,float b_th);
 
 // =========================================================================

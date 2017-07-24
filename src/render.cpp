@@ -21,6 +21,15 @@ float floor_factor = 0.75;
 
 // the light position can be animated
 glm::vec3 Mesh::LightPosition() const {
+  // glm::vec3 min = bbox.getMin();
+  // glm::vec3 max = bbox.getMax();
+  // glm::vec3 tmp;
+  // bbox.getCenter(tmp);
+  // tmp += glm::vec3(0,1.5*(max.y-min.y),0);
+  // tmp += glm::vec3(cos(args->timer) * (max.x-min.x), 0, 0);
+  // tmp += glm::vec3(0,0,sin(args->timer) * (max.z-min.z));
+  // return tmp;
+
   glm::vec3 min = bbox.getMin();
   glm::vec3 max = bbox.getMax();
   glm::vec3 tmp;
@@ -55,7 +64,6 @@ glm::vec4 EdgeColor(Edge *e) {
 
 // ================================================================================
 // ================================================================================
-
 
 void Mesh::TriVBOHelper( const glm::vec3 &pos_a,
                          const glm::vec3 &pos_b,
@@ -126,9 +134,37 @@ void Mesh::TriVBOHelper( const glm::vec3 &pos_a,
 
 }
 
-
-
 void Mesh::SetupMesh() {
+  // for (triangleshashtype::iterator iter = triangles.begin();
+  //      iter != triangles.end(); iter++) {
+  //   Triangle *t = iter->second;
+  //   glm::vec3 a = (*t)[0]->getPos();
+  //   glm::vec3 b = (*t)[1]->getPos();
+  //   glm::vec3 c = (*t)[2]->getPos();
+  //   glm::vec3 na = ComputeNormal(a,b,c);
+  //   glm::vec3 nb = na;
+  //   glm::vec3 nc = na;
+  //   if (args->gouraud_normals) {
+  //     na = (*t)[0]->getGouraudNormal();
+  //     nb = (*t)[1]->getGouraudNormal();
+  //     nc = (*t)[2]->getGouraudNormal();
+  //   }
+  //   int start = mesh_tri_verts.size();
+  //   mesh_tri_verts.push_back(VBOPosNormalColor(a,na,mesh_color));
+  //   mesh_tri_verts.push_back(VBOPosNormalColor(b,nb,mesh_color));
+  //   mesh_tri_verts.push_back(VBOPosNormalColor(c,nc,mesh_color));
+  //   mesh_tri_indices.push_back(VBOIndexedTri(start,start+1,start+2));
+  // }
+  // glBindBuffer(GL_ARRAY_BUFFER,mesh_tri_verts_VBO);
+  // glBufferData(GL_ARRAY_BUFFER,
+	//        sizeof(VBOPosNormalColor) * mesh_tri_verts.size(),
+	//        &mesh_tri_verts[0],
+	//        GL_STATIC_DRAW);
+  // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,mesh_tri_indices_VBO);
+  // glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+	//        sizeof(VBOIndexedTri) * mesh_tri_indices.size(),
+	//        &mesh_tri_indices[0], GL_STATIC_DRAW);
+
   for (triangleshashtype::iterator iter = triangles.begin();
        iter != triangles.end(); iter++) {
     Triangle *t = iter->second;
@@ -150,7 +186,7 @@ void Mesh::SetupMesh() {
       nb = (*t)[1]->getGouraudNormal();
       nc = (*t)[2]->getGouraudNormal();
     }
-    glm::vec4 center_color = colors[(*t)[0]->getObjectIndex()];
+    glm::vec4 center_color = meshColor;
 
     TriVBOHelper(a,b,c,
                  na,nb,nc,
@@ -159,21 +195,18 @@ void Mesh::SetupMesh() {
 
   glBindBuffer(GL_ARRAY_BUFFER,mesh_tri_verts_VBO);
   glBufferData(GL_ARRAY_BUFFER,
-	       sizeof(VBOPosNormalColor) * mesh_tri_verts.size(),
-	       &mesh_tri_verts[0],
-	       GL_STATIC_DRAW);
+         sizeof(VBOPosNormalColor) * mesh_tri_verts.size(),
+         &mesh_tri_verts[0],
+         GL_STATIC_DRAW);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,mesh_tri_indices_VBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-	       sizeof(VBOIndexedTri) * mesh_tri_indices.size(),
-	       &mesh_tri_indices[0], GL_STATIC_DRAW);
+         sizeof(VBOIndexedTri) * mesh_tri_indices.size(),
+         &mesh_tri_indices[0], GL_STATIC_DRAW);
 
 }
 
-
-
 // ================================================================================
 // ================================================================================
-
 
 void Mesh::DrawMesh() {
   HandleGLError("enter draw mesh");
@@ -192,7 +225,6 @@ void Mesh::DrawMesh() {
   HandleGLError("leaving draw mesh");
 }
 
-
 // ======================================================================================
 // ======================================================================================
 
@@ -209,17 +241,17 @@ void Mesh::setupVBOs() {
 void Mesh::drawVBOs() {
 
 
-  // mode 1: STANDARD PHONG LIGHTING (LIGHT ON)
-  glUniform1i(GLCanvas::colormodeID, 1);
+    // mode 1: STANDARD PHONG LIGHTING (LIGHT ON)
+    glUniform1i(GLCanvas::colormodeID, 1);
 
-  glUniform1i(GLCanvas::wireframeID, args->wireframe);
+    glUniform1i(GLCanvas::wireframeID, args->wireframe);
 
 
-  HandleGLError("enter draw vbos");
+    HandleGLError("enter draw vbos");
 
-  DrawMesh();
+    DrawMesh();
 
-  HandleGLError();
+    HandleGLError();
 }
 
 // =================================================================

@@ -7,6 +7,7 @@
 #include "hash.h"
 #include "boundingbox.h"
 #include "vbo_structs.h"
+#include "argparser.h"
 
 class ArgParser;
 class Vertex;
@@ -17,32 +18,32 @@ class Triangle;
 // ======================================================================
 
 class Mesh {
-
+  friend class BSPTree;
 public:
 
   // ========================
   // CONSTRUCTOR & DESTRUCTOR
+  Mesh() {
+    args = NULL;
+    float r = (float)(args->rand());
+    float g = (float)(args->rand());
+    float b = (float)(args->rand());
+    meshColor = glm::vec4(r,g,b,1);
+  }
   Mesh(ArgParser *_args) {
     args = _args;
-    glm::vec4 colorsArray[10] = {
-        glm::vec4(0.886f, 0.313f, 0.345f,1),
-        glm::vec4(0.760f, 0.419f, 0.592f,1),
-        glm::vec4(0.4f, 0.647f, 0.882f,1),
-        glm::vec4(0.415f, 0.823f, 0.745f,1),
-        glm::vec4(0.439f, 0.360f, 0.8f,1),
-        glm::vec4(0.898f, 0.513f, 0.321f,1),
-        glm::vec4(0.921f, 0.886f, 0.439f,1),
-        glm::vec4(0.537f, 0.858f, 0.341f,1),
-        glm::vec4(0.345f, 0.447f, 0.835f,1),
-        glm::vec4(0.603f, 0.835f, 0.345f,1)
-    };
-    colors.insert(colors.end(), &colorsArray[0], &colorsArray[10]);
-    total_vertices = 0;
-    total_triangles = 0;
-    total_edges = 0;
-
+    float r = (float)(args->rand());
+    float g = (float)(args->rand());
+    float b = (float)(args->rand());
+    meshColor = glm::vec4(r,g,b,1);
   }
+  Mesh(const Mesh &oldMesh);
   ~Mesh();
+
+  // ASSIGNMENT OPERATOR
+  Mesh& operator= (const Mesh& oldMesh);
+
+  void clear();
   void Load();
   void ComputeGouraudNormals();
 
@@ -51,30 +52,15 @@ public:
   void drawVBOs();
   void cleanupVBOs();
 
-  int numObjects() const { return vertices.size(); }
-
   // ========
   // VERTICES
-  int totalVertices() const { return total_vertices; }
-  int numVertices(int i) const { return vertices[i].size(); }
-  Vertex* addVertex(const glm::vec3 &pos, int index);
+  int numVertices() const { return vertices.size(); }
+  Vertex* addVertex(const glm::vec3 &pos);
+  Vertex* addVertex(const glm::vec3 &pos, bool addToBoundingBox);
   // look up vertex by index from original .obj file
   Vertex* getVertex(int i) const {
-    assert (i >= 0 && i < totalVertices());
-    Vertex *v;
-    int count = 0;
-    for (int j=0; j<numObjects(); j++) {
-      if (count + numVertices(j) > i) {
-        v = vertices[j][i - count];
-        break;
-      }
-      count += numVertices(j);
-    }
-    assert (v != NULL);
-    return v; }
-  Vertex* getVertex(int i, int j) const {
-    assert (i >= 0 && i < totalVertices());
-    Vertex *v = vertices[i][j];
+    assert (i >= 0 && i < numVertices());
+    Vertex *v = vertices[i];
     assert (v != NULL);
     return v; }
 
@@ -82,22 +68,18 @@ public:
   // EDGES
   int numEdges() const { return edges.size(); }
   // this efficiently looks for an edge with the given vertices, using a hash table
-  Edge* getMeshEdge(Vertex *a, Vertex *b, int index) const;
+  Edge* getMeshEdge(Vertex *a, Vertex *b) const;
 
   // =========
   // TRIANGLES
-  int numTriangles() const { return total_triangles; }
-  void addTriangle(Vertex *a, Vertex *b, Vertex *c, int index);
-  void removeTriangle(Triangle *t, int i);
+  int numTriangles() const { return triangles.size(); }
+  Triangle* addTriangle(Vertex *a, Vertex *b, Vertex *c);
+  void removeTriangle(Triangle *t);
 
   // ===============
   // OTHER ACCESSORS
   const BoundingBox& getBoundingBox() const { return bbox; }
   glm::vec3 LightPosition() const;
-
-  // ==================
-  // SPECIAL OPERATIONS
-  void chop(unsigned int index, const glm::vec3& normal, float offset);
 
   // function that helps with doing the wireframe stuff
   void TriVBOHelper( const glm::vec3 &pos_a,
@@ -114,26 +96,38 @@ public:
   // function to output scene into obj file
   void OutputFile();
 
+  // Determines whether mesh can fit inside of specified volume dimensions
+  bool fitsInVolume(float width, float height, float length);
+
+  // HELPER FUNCTIONS FOR OBJECTIVE FUNCTIONS
+  int numPrintVolumes(float width, float height, float length);
+  float getBBVolume() { return bbox.getVolume(); }
+  glm::vec3 getBoundingBoxDims();
+
+  // ==================================================
+  // PARENT VERTEX RELATIONSHIPS (used for subdivision)
+  // this creates a relationship between 3 vertices (2 parents, 1 child)
+  void setParentsChild(Vertex *p1, Vertex *p2, Vertex *child);
+  // this accessor will find a child vertex (if it exists) when given
+  // two parent vertices
+  Vertex* getChildVertex(Vertex *p1, Vertex *p2) const;
+
 private:
 
   // HELPER FUNCTIONS FOR PAINT
-  // void SetupLight(const glm::vec3 &light_position);
   void SetupMesh();
 
-  // void DrawLight();
   void DrawMesh();
 
   // ==============
   // REPRESENTATION
   ArgParser *args;
-  std::vector<std::vector<Vertex*> > vertices;  //each vector of vertices reps an object
-  std::vector<edgeshashtype> edges;
-  std::vector<triangleshashtype> triangles;
+  std::vector<Vertex*> vertices;
+  edgeshashtype edges;
+  triangleshashtype triangles;
   BoundingBox bbox;
-  std::vector<glm::vec4> colors;  //pre-defined colors for different objects in mesh
-  int total_vertices;
-  int total_triangles;
-  int total_edges;
+  glm::vec4 meshColor;  //pre-defined colors for different objects in mesh
+  vphashtype vertex_parents;
 
   // VBOs
   GLuint mesh_tri_verts_VBO;

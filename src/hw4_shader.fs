@@ -28,27 +28,28 @@ void main(){
   vec3 MaterialDiffuseColor = myColor;
 
   //wireframe shading
-  if (wireframe == 1) {
-      if (myColor.x < 0.1 &&
-          myColor.y < 0.1 &&
-          myColor.z < 0.1) {
-        MaterialDiffuseColor *= 0.6 * vec3(1,1,1);
-      }
-  }
+  // if (wireframe == 1) {
+  //     if (myColor.x < 0.1 &&
+  //         myColor.y < 0.1 &&
+  //         myColor.z < 0.1) {
+  //       MaterialDiffuseColor *= 0.6 * vec3(1,1,1);
+  //     }
+  // }
 
   //this creates the nice wireframe but also makes everything gray
-  // if ( (wireframe == 0) ||
-  //      ( myColor.x > 0.1 &&
-  //        myColor.y > 0.1 &&
-  //        myColor.z > 0.1) ) {
-  //   MaterialDiffuseColor = 0.6 * vec3(1,1,1);
-  // } else {
-  //   if (myColor.x < 0.1 &&
-  //       myColor.y < 0.1 &&
-  //       myColor.z < 0.1) {
-  //     MaterialDiffuseColor *= 7.0;
-  //   }
-  // }
+  if ( (wireframe == 1) &&
+       ( myColor.x > 0.1 &&
+         myColor.y > 0.1 &&
+         myColor.z > 0.1) ) {
+    MaterialDiffuseColor = 0.6 * vec3(1,1,1);
+  } else {
+    if (myColor.x < 0.1 &&
+        myColor.y < 0.1 &&
+        myColor.z < 0.1) {
+      // MaterialDiffuseColor *= 7.0;
+      MaterialDiffuseColor = vec3(0.0,0.0,0.0);
+    }
+  }
 
   vec3 MaterialAmbientColor = vec3(0.3,0.3,0.3) * MaterialDiffuseColor;
   vec3 MaterialSpecularColor = vec3(0.3,0.3,0.3);

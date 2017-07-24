@@ -29,7 +29,8 @@ int main(int argc, char *argv[]) {
   ArgParser args(argc, argv);
   GLCanvas::initialize(&args);
 
-  glClearColor(0.8,0.9,1.0,0.0);  // light blue sky
+  // glClearColor(0.8,0.9,1.0,0.0);  // light blue sky
+  glClearColor(1.0,1.0,1.0,0.0);
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
 

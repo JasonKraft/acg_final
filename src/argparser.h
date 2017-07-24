@@ -66,7 +66,18 @@ public:
         wireframe = 1;
       } else if (argv[i] == std::string("-printing_size")) {
         i++; assert( i < argc);
-        printing_width = printing_height = atoi(argv[i]);
+        sscanf(argv[i], "%f", &printing_width);
+        i++; assert( i < argc);
+        sscanf(argv[i], "%f", &printing_height);
+        i++; assert( i < argc);
+        sscanf(argv[i], "%f", &printing_length);
+      } else if (argv[i] == std::string("-beam_width") ||
+          argv[i] == std::string("-b")) {
+        i++; assert(i < argc);
+        beam_width = atoi(argv[i]);
+      } else if (argv[i] == std::string("-offset_increment")) {
+        i++; assert(i < argc);
+        sscanf(argv[i], "%f", &offset_increment);
       } else {
 	std::cout << "ERROR: unknown command line argument "
 		  << i << ": '" << argv[i] << "'" << std::endl;
@@ -95,12 +106,18 @@ public:
     shader_filename = "hw4_shader";
     width = 500;
     height = 500;
-    printing_width = 500;
-    printing_height = 500;
+    printing_width = 0.1;
+    printing_height = 0.1;
+    printing_length = 0.1;
+    beam_width = 4;
+    offset_increment = 0.01;
     geometry = true;
     wireframe = 0;
     bounding_box = false;
     gouraud_normals = false;
+    a_part = 1.0;
+    a_util = 0.05;
+    a_connector = 1.0;
   }
 
   // ==============
@@ -113,12 +130,20 @@ public:
   std::string shader_filename;
   int width;
   int height;
-  int printing_width;
-  int printing_height;
+  float printing_width;
+  float printing_height;
+  float printing_length;
+  int beam_width;
+  float offset_increment;
   bool geometry;
   GLint wireframe;
   bool bounding_box;
   bool gouraud_normals;
+
+  // objective function weight coefficients
+  float a_part;
+  float a_util;
+  float a_connector;
 };
 
 #endif

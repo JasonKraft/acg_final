@@ -13,11 +13,10 @@ public:
 
   // ========================
   // CONSTRUCTOR & DESTRUCTOR
-  Triangle(int _objectIndex) {
+  Triangle() {
     edge = NULL;
     id = next_triangle_id;
     next_triangle_id++;
-    objectIndex = _objectIndex;
   }
   ~Triangle() {}
 
@@ -35,7 +34,6 @@ public:
     return edge;
   }
   int getID() { return id; }
-  int getObjectIndex() { return objectIndex; }
 
   // =========
   // MODIFIERS
@@ -50,7 +48,6 @@ protected:
   // REPRESENTATION
   Edge *edge;
   int id;
-  int objectIndex;
 
   static int next_triangle_id;
 };
